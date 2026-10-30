@@ -1,0 +1,415 @@
+[
+  {
+    "name": "LowerSpineJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "MiddleSpineJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "UpperSpineJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LowerNeckJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "UpperNeckJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": {
+      "btwistSize": 1.2999999523162842,
+      "bswing1Size": 1.5,
+      "bswing2Size": 1,
+      "bradius": 0,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 1.350000023841858,
+      "bswing1Size": 1.5499999523162842,
+      "bswing2Size": 1.0499999523162842,
+      "bradius": 0,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  },
+  {
+    "name": "LeftArmVirtualMuscle",
+    "fixedCoords": "CoordsNone",
+    "hingeLimits": null,
+    "soft": {
+      "btwistSize": 2.5,
+      "bswing1Size": 2.049999952316284,
+      "bswing2Size": 2.75,
+      "bradius": 2.5999999046325684,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 2.75,
+      "bswing1Size": 2.25,
+      "bswing2Size": 2.990000009536743,
+      "bradius": 2.6500000953674316,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  },
+  {
+    "name": "RightArmVirtualMuscle",
+    "fixedCoords": "CoordsNone",
+    "hingeLimits": null,
+    "soft": {
+      "btwistSize": 2.5,
+      "bswing1Size": 2.049999952316284,
+      "bswing2Size": 2.75,
+      "bradius": 2.5999999046325684,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 2.75,
+      "bswing1Size": 2.25,
+      "bswing2Size": 2.990000009536743,
+      "bradius": 2.6500000953674316,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  },
+  {
+    "name": "RightClavicleJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "RightShoulderJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "RightElbowJoint",
+    "fixedCoords": "CoordsLinearAndSwing",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "RightForearmTwistJoint",
+    "fixedCoords": "CoordsLinearAndSwing",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "RightWristJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": {
+      "lower": -0.27454,
+      "upper": 3.1,
+      "stiffness": 20,
+      "damping": 100,
+      "restitution": 0.1
+    },
+    "soft": {
+      "btwistSize": 0,
+      "bswing1Size": 0.5,
+      "bswing2Size": 3,
+      "bradius": 0,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 0.05000000074505806,
+      "bswing1Size": 0.550000011920929,
+      "bswing2Size": 3.0999999046325684,
+      "bradius": 0,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  },
+  {
+    "name": "LeftClavicleJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LeftShoulderJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LeftElbowJoint",
+    "fixedCoords": "CoordsLinearAndSwing",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LeftForearmTwistJoint",
+    "fixedCoords": "CoordsLinearAndSwing",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LeftWristJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": {
+      "lower": -0.27454,
+      "upper": 3.1,
+      "stiffness": 20,
+      "damping": 100,
+      "restitution": 0.1
+    },
+    "soft": {
+      "btwistSize": 0,
+      "bswing1Size": 0.5,
+      "bswing2Size": 3,
+      "bradius": 0,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 0.05000000074505806,
+      "bswing1Size": 0.550000011920929,
+      "bswing2Size": 3.0999999046325684,
+      "bradius": 0,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  },
+  {
+    "name": "LeftLegVirtualMuscle",
+    "fixedCoords": "CoordsNone",
+    "hingeLimits": null,
+    "soft": {
+      "btwistSize": 2.5,
+      "bswing1Size": 2.049999952316284,
+      "bswing2Size": 2.75,
+      "bradius": 2.5999999046325684,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 2.75,
+      "bswing1Size": 2.25,
+      "bswing2Size": 2.990000009536743,
+      "bradius": 2.6500000953674316,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  },
+  {
+    "name": "RightLegVirtualMuscle",
+    "fixedCoords": "CoordsNone",
+    "hingeLimits": null,
+    "soft": {
+      "btwistSize": 2.5,
+      "bswing1Size": 2.049999952316284,
+      "bswing2Size": 2.75,
+      "bradius": 2.5999999046325684,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 2.75,
+      "bswing1Size": 2.25,
+      "bswing2Size": 2.990000009536743,
+      "bradius": 2.6500000953674316,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  },
+  {
+    "name": "RightHipJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "RightKneeJoint",
+    "fixedCoords": "CoordsLinearAndSwing2",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "RightAnkleJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "RightMidFootJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "RightToesJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": {
+      "btwistSize": 0.20000000298023224,
+      "bswing1Size": 1,
+      "bswing2Size": 0.20000000298023224,
+      "bradius": 0,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 0.25,
+      "bswing1Size": 1.0499999523162842,
+      "bswing2Size": 0.25,
+      "bradius": 0,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  },
+  {
+    "name": "LeftHipJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LeftKneeJoint",
+    "fixedCoords": "CoordsLinearAndSwing2",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LeftAnkleJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LeftMidFootJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": null,
+    "hard": null
+  },
+  {
+    "name": "LeftToesJoint",
+    "fixedCoords": "CoordsLinear",
+    "hingeLimits": null,
+    "soft": {
+      "btwistSize": 0.20000000298023224,
+      "bswing1Size": 1,
+      "bswing2Size": 0.20000000298023224,
+      "bradius": 0,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "hard": {
+      "btwistSize": 0.25,
+      "bswing1Size": 1.0499999523162842,
+      "bswing2Size": 0.25,
+      "bradius": 0,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    }
+  }
+]

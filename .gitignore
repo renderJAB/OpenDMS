@@ -1,0 +1,10 @@
+node_modules/
+dist/
+scratch/
+*.log
+*.zip
+*.bin
+*.chm
+.DS_Store
+Thumbs.db
+sync_to_gdrive.bat

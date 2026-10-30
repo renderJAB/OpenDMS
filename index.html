@@ -1,0 +1,3372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenDMS — Modern Dynamic Motion Synthesis Studio</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+      background: #070b14;
+      color: #e2e8f0;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==========================================================================
+       MODERN 3D SOFTWARE TOP MENU BAR & HEADER TOOLBAR
+       ========================================================================== */
+    header.dcc-header {
+      background: #0b1120;
+      border-bottom: 1px solid #1e293b;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-size: 12px;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      color: #38bdf8;
+      padding-right: 10px;
+      margin-right: 4px;
+      border-right: 1px solid #1e293b;
+      height: 24px;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #f0f9ff;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Topbar Menu System */
+    .dcc-menubar {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      gap: 2px;
+    }
+
+    .dcc-menu-item {
+      position: relative;
+      height: 28px;
+      display: flex;
+      align-items: center;
+    }
+
+    .dcc-menu-trigger {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.12s ease;
+    }
+
+    .dcc-menu-item:hover > .dcc-menu-trigger,
+    .dcc-menu-item.open > .dcc-menu-trigger {
+      background: #1e293b;
+      border-color: #334155;
+      color: #38bdf8;
+    }
+
+    /* 1st-Level Dropdown Menu */
+    .dcc-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0;
+      min-width: 235px;
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(12px);
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 5px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+      z-index: 1000;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    /* Subtle invisible bridge so diagonal cursor movement doesn't close menu */
+    .dcc-dropdown::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: 0;
+      right: 0;
+      height: 6px;
+    }
+
+    .dcc-menu-item:hover > .dcc-dropdown,
+    .dcc-menu-item.open > .dcc-dropdown {
+      display: flex;
+    }
+
+    .dcc-menu-option,
+    .dcc-submenu-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 6px 10px;
+      border: none;
+      background: transparent;
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: 500;
+      text-align: left;
+      border-radius: 4px;
+      cursor: pointer;
+      gap: 10px;
+      transition: background 0.1s ease, color 0.1s ease;
+    }
+
+    .dcc-menu-option:hover,
+    .dcc-submenu-row:hover {
+      background: rgba(56, 189, 248, 0.16);
+      color: #38bdf8;
+    }
+
+    .dcc-option-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dcc-option-icon {
+      width: 16px;
+      text-align: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .dcc-option-shortcut {
+      font-size: 10px;
+      color: #64748b;
+      font-family: monospace;
+      margin-left: auto;
+    }
+
+    .dcc-submenu-arrow {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-left: auto;
+      padding-left: 8px;
+      transition: transform 0.12s ease, color 0.12s ease;
+    }
+
+    .dcc-submenu-row:hover > .dcc-submenu-arrow {
+      color: #38bdf8;
+      transform: translateX(2px);
+    }
+
+    .dcc-menu-divider {
+      height: 1px;
+      background: #1e293b;
+      margin: 4px 6px;
+    }
+
+    .dcc-menu-section-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: #64748b;
+      padding: 4px 10px 2px;
+    }
+
+    /* 2nd-Level Cascading Flyout Menu (Inside Topbar Dropdowns) */
+    .dcc-flyout-2nd {
+      display: none;
+      position: absolute;
+      top: -4px;
+      left: calc(100% - 2px);
+      min-width: 265px;
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(12px);
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 5px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(56, 189, 248, 0.12);
+      z-index: 1100;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* Invisible hover bridge between 1st level and 2nd level flyout */
+    .dcc-flyout-2nd::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      bottom: -10px;
+      left: -18px;
+      width: 20px;
+      pointer-events: auto;
+    }
+
+    .dcc-submenu-row:hover > .dcc-flyout-2nd {
+      display: flex;
+    }
+
+    /* Right side of Topbar */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .transform-tool-group {
+      display: flex;
+      gap: 2px;
+      background: #070b14;
+      border: 1px solid #1e293b;
+      border-radius: 5px;
+      padding: 2px;
+    }
+    .transform-mode-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.12s ease;
+    }
+    .transform-mode-btn:hover {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .transform-mode-btn.active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.4);
+      font-weight: 600;
+    }
+
+    .status-badge {
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .status-authoring {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid #0284c7;
+      color: #38bdf8;
+    }
+
+    .status-rendering {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid #d97706;
+      color: #fbbf24;
+      animation: pulse 1s infinite alternate;
+    }
+
+    .status-baked {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid #059669;
+      color: #34d399;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.7; }
+      to { opacity: 1.0; }
+    }
+
+    .btn {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      padding: 5px 11px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-simulate {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #ffffff;
+      border: 1px solid #3b82f6;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+      padding: 5px 13px;
+      font-size: 11px;
+    }
+
+    .btn-simulate:hover:not(:disabled) {
+      background: linear-gradient(135deg, #1d4ed8, #6d28d9);
+      box-shadow: 0 3px 12px rgba(37, 99, 235, 0.55);
+    }
+
+    /* ==========================================================================
+       WORKSPACE & SIDE PANELS
+       ========================================================================== */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel {
+      background: #0f172a;
+      width: 275px;
+      display: flex;
+      flex-direction: column;
+      border-color: #1e293b;
+      z-index: 20;
+    }
+
+    .panel-left {
+      border-right: 1px solid #1e293b;
+    }
+
+    .panel-right {
+      border-left: 1px solid #1e293b;
+    }
+
+    .panel-header {
+      padding: 10px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #94a3b8;
+      background: #0b1120;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-body {
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-group label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #94a3b8;
+    }
+
+    .btn-add-layer {
+      background: #162033;
+      border: 1px solid #26354d;
+      color: #cbd5e1;
+      padding: 7px 10px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.12s ease;
+    }
+
+    .btn-add-layer:hover {
+      background: #1e293b;
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
+    /* ==========================================================================
+       CASCADING FLYOUT MENU IN LEFT PANEL (WITH RIGHT ARROW ▸ & 2ND LEVEL POPUP)
+       ========================================================================== */
+    .cascade-menu-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 4px;
+    }
+
+    .cascade-category-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: 4px;
+      background: #111a2e;
+      border: 1px solid transparent;
+      color: #e2e8f0;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .cascade-category-item:hover,
+    .cascade-category-item.active {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.45);
+      color: #38bdf8;
+    }
+
+    .cascade-cat-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cascade-cat-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cascade-count-badge {
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(148, 163, 184, 0.14);
+      color: #94a3b8;
+      padding: 1px 5px;
+      border-radius: 8px;
+    }
+
+    .cascade-category-item:hover .cascade-count-badge,
+    .cascade-category-item.active .cascade-count-badge {
+      background: rgba(56, 189, 248, 0.2);
+      color: #7dd3fc;
+    }
+
+    .cascade-arrow {
+      font-size: 11px;
+      color: #64748b;
+      transition: transform 0.12s ease, color 0.12s ease;
+    }
+
+    .cascade-category-item:hover .cascade-arrow,
+    .cascade-category-item.active .cascade-arrow {
+      color: #38bdf8;
+      transform: translateX(2px);
+    }
+
+    /* Floating 2nd-Level Flyout Portal (Rendered fixed so it never clips inside scrollbars) */
+    #behavior-flyout-portal {
+      display: none;
+      position: fixed;
+      min-width: 280px;
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(14px);
+      border: 1px solid #38bdf8;
+      border-radius: 7px;
+      padding: 6px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 16px rgba(56, 189, 248, 0.18);
+      z-index: 2500;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    /* Invisible left bridge so moving mouse from panel to flyout never drops hover */
+    #behavior-flyout-portal::before {
+      content: "";
+      position: absolute;
+      top: -12px;
+      bottom: -12px;
+      left: -24px;
+      width: 28px;
+      pointer-events: auto;
+    }
+
+    .flyout-header {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: #38bdf8;
+      padding: 4px 8px 6px;
+      border-bottom: 1px solid #1e293b;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .flyout-behavior-btn {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      width: 100%;
+      padding: 7px 9px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      color: #f1f5f9;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .flyout-behavior-btn:hover {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .flyout-b-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .flyout-b-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .flyout-b-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .flyout-behavior-btn:hover .flyout-b-title {
+      color: #38bdf8;
+    }
+
+    .flyout-b-desc {
+      font-size: 10px;
+      color: #94a3b8;
+      line-height: 1.3;
+    }
+
+    .flyout-b-frames {
+      font-size: 9px;
+      font-family: monospace;
+      color: #64748b;
+      background: #090e1a;
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid #1e293b;
+      align-self: center;
+    }
+
+    /* ==========================================================================
+       3D VIEWPORT & OVERLAYS
+       ========================================================================== */
+    #viewport-container {
+      flex: 1;
+      position: relative;
+      outline: none;
+    }
+
+    .viewport-overlay {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 9px 13px;
+      font-size: 11.5px;
+      color: #94a3b8;
+      pointer-events: none;
+      line-height: 1.5;
+    }
+
+    /* Right Viewport Floating Skeleton Hierarchy HUD Overlay */
+    .viewport-bone-tree-overlay {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 265px;
+      max-height: calc(100% - 24px);
+      background: rgba(11, 17, 32, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 14px rgba(56, 189, 248, 0.12);
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+      transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+      overflow: hidden;
+    }
+
+    .viewport-bone-tree-overlay.minimized {
+      width: 175px;
+      max-height: 38px;
+      background: rgba(11, 17, 32, 0.88);
+      border-color: rgba(56, 189, 248, 0.25);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .viewport-bone-tree-overlay.minimized .bone-tree-body {
+      display: none !important;
+    }
+
+    .bone-tree-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+      gap: 6px;
+    }
+
+    .viewport-bone-tree-overlay.minimized .bone-tree-header {
+      border-bottom: none;
+    }
+
+    .bone-tree-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: 0.3px;
+    }
+
+    .bone-tree-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bone-tree-btn-mini {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      border-radius: 3px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s ease;
+    }
+
+    .bone-tree-btn-mini:hover {
+      background: #38bdf8;
+      color: #070b14;
+      border-color: #38bdf8;
+    }
+
+    .bone-tree-body {
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .bone-tree-scroll {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      padding-right: 2px;
+    }
+
+    /* ==========================================================================
+       BOTTOM TIMELINE SEQUENCER
+       ========================================================================== */
+    footer {
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      height: 225px;
+      display: flex;
+      flex-direction: column;
+      z-index: 20;
+    }
+
+    .timeline-header-bar {
+      height: 40px;
+      padding: 0 14px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .timeline-scrubber-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .timeline-slider {
+      flex: 1;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      cursor: pointer;
+      accent-color: #38bdf8;
+    }
+
+    .frame-badge {
+      font-family: monospace;
+      font-size: 12px;
+      color: #38bdf8;
+      background: #070b14;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #1e293b;
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .timeline-ruler-row {
+      display: flex;
+      height: 24px;
+      background: #090e1a;
+      border-bottom: 1px solid #1e293b;
+      align-items: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 15;
+    }
+
+    .timeline-ruler-header {
+      width: 260px;
+      flex-shrink: 0;
+      height: 100%;
+      border-right: 1px solid #1e293b;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .timeline-ruler-track {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      cursor: ew-resize;
+      background: repeating-linear-gradient(
+        to right,
+        rgba(148, 163, 184, 0.12) 0px,
+        rgba(148, 163, 184, 0.12) 1px,
+        transparent 1px,
+        transparent 12.5%
+      );
+    }
+
+    .ruler-tick-label {
+      position: absolute;
+      top: 4px;
+      transform: translateX(-50%);
+      font-family: monospace;
+      font-size: 9.5px;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    .timeline-tracks-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Vertical Playhead Line spanning Ruler + All Tracks */
+    .timeline-playhead-overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 260px;
+      right: 0;
+      pointer-events: none;
+      z-index: 30;
+      overflow: hidden;
+    }
+
+    .playhead-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0%;
+      width: 2px;
+      background: #f43f5e;
+      box-shadow: 0 0 8px rgba(244, 63, 94, 0.8);
+      transform: translateX(-1px);
+    }
+
+    .playhead-cap {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      background: #f43f5e;
+      clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%);
+    }
+
+    .timeline-layers-viewport {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .layer-row {
+      display: flex;
+      height: 36px;
+      flex-shrink: 0;
+      border-bottom: 1px solid #1e293b;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .layer-header {
+      width: 260px;
+      flex-shrink: 0;
+      height: 100%;
+      background: #0d1322;
+      border-right: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .layer-reorder-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .btn-arrow {
+      background: #1e293b;
+      border: none;
+      color: #94a3b8;
+      width: 16px;
+      height: 13px;
+      font-size: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 2px;
+    }
+
+    .btn-arrow:hover:not(:disabled) {
+      background: #38bdf8;
+      color: #070b14;
+    }
+
+    .btn-arrow:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
+    .layer-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .layer-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+    }
+
+    .layer-del-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 4px;
+    }
+
+    .layer-del-btn:hover {
+      color: #ef4444;
+    }
+
+    .layer-track-area {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      background: repeating-linear-gradient(
+        to right,
+        rgba(30, 41, 59, 0.35) 0px,
+        rgba(30, 41, 59, 0.35) 1px,
+        #080c16 1px,
+        #080c16 12.5%
+      );
+    }
+
+    .layer-bar {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      cursor: grab;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      z-index: 5;
+    }
+
+    .layer-bar:hover {
+      filter: brightness(1.08);
+    }
+
+    .layer-bar.dragging {
+      cursor: grabbing;
+      outline: 2px solid #fbbf24 !important;
+      box-shadow: 0 0 14px rgba(251, 191, 36, 0.55);
+      z-index: 25;
+    }
+
+    .bar-label {
+      padding: 0 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+      flex: 1;
+    }
+
+    .bar-resize-handle {
+      width: 10px;
+      height: 100%;
+      flex-shrink: 0;
+      cursor: ew-resize;
+      background: rgba(255, 255, 255, 0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s, width 0.1s;
+    }
+
+    .bar-resize-handle::after {
+      content: "⋮";
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.85);
+      pointer-events: none;
+    }
+
+    .bar-resize-handle:hover {
+      background: rgba(255, 255, 255, 0.65);
+      width: 12px;
+    }
+
+    .left-handle {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+    }
+
+    .right-handle {
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
+
+    .layer-row.selected .layer-header {
+      background: #172554;
+      border-left: 3px solid #38bdf8;
+    }
+
+    .layer-row.selected .layer-bar {
+      outline: 2px solid #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+    }
+
+    .inspector-box {
+      background: #070b14;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .inspector-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: background 0.12s ease, border-color 0.12s ease;
+      border: 1px solid transparent;
+    }
+
+    .inspector-row:hover,
+    .inspector-row:focus-within {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.28);
+    }
+
+    .inspector-row label {
+      font-size: 10px;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .inspector-input, .inspector-select {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    /* Embedded Dynamic Inspector Setting Guide Card */
+    .inspector-guide-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.7) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 6px;
+      padding: 9px 11px;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      transition: all 0.15s ease;
+    }
+
+    .guide-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+      padding-bottom: 3px;
+      margin-bottom: 2px;
+    }
+
+    .guide-card-badge {
+      font-size: 8.5px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(56, 189, 248, 0.18);
+      color: #7dd3fc;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .guide-card-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .guide-card-desc {
+      font-size: 10.5px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .guide-card-effect {
+      font-size: 10px;
+      color: #34d399;
+      line-height: 1.4;
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 2px solid #10b981;
+      padding: 4px 7px;
+      border-radius: 0 4px 4px 0;
+      margin-top: 2px;
+    }
+
+    /* Global Sleek Floating Tooltip (Viewport & Sidebar items) */
+    #opendms-floating-tooltip {
+      position: fixed;
+      display: none;
+      max-width: 320px;
+      min-width: 230px;
+      background: rgba(11, 17, 32, 0.97);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      border-radius: 7px;
+      padding: 9px 12px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.8), 0 0 16px rgba(56, 189, 248, 0.22);
+      pointer-events: none;
+      z-index: 99999;
+      flex-direction: column;
+      gap: 5px;
+      transition: opacity 0.12s ease;
+      opacity: 0;
+    }
+
+    #opendms-floating-tooltip.visible {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* ==========================================================================
+       SCENE OUTLINER (OBJECT TREE & CHARACTER SKELETON HIERARCHY)
+       ========================================================================== */
+    .panel-tab-btn {
+      flex: 1;
+      padding: 9px 8px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .panel-tab-btn:hover {
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .panel-tab-btn.active {
+      color: #38bdf8;
+      border-bottom-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.07);
+    }
+
+    .outliner-count-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+    }
+
+    .outliner-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .outliner-search-input {
+      width: 100%;
+      background: #070b14;
+      border: 1px solid #1e293b;
+      color: #e2e8f0;
+      padding: 6px 9px;
+      border-radius: 4px;
+      font-size: 11px;
+      box-sizing: border-box;
+    }
+
+    .outliner-search-input:focus {
+      outline: none;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 1px #38bdf8;
+    }
+
+    .outliner-quick-actions {
+      display: flex;
+      gap: 4px;
+      justify-content: space-between;
+    }
+
+    .outliner-btn-mini {
+      background: #162033;
+      border: 1px solid #26354d;
+      color: #94a3b8;
+      padding: 4px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.12s ease;
+    }
+
+    .outliner-btn-mini:hover {
+      background: #1e293b;
+      color: #38bdf8;
+      border-color: #38bdf8;
+    }
+
+    .outliner-tree-container {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .tree-node {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tree-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+      gap: 4px;
+      font-size: 11px;
+      color: #cbd5e1;
+      border: 1px solid transparent;
+      transition: background 0.1s ease, color 0.1s ease;
+    }
+
+    .tree-row:hover {
+      background: rgba(56, 189, 248, 0.08);
+      color: #f1f5f9;
+    }
+
+    .tree-row.selected {
+      background: rgba(56, 189, 248, 0.20);
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .tree-chevron {
+      width: 14px;
+      height: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      color: #64748b;
+      cursor: pointer;
+      transition: transform 0.15s ease, color 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .tree-chevron:hover {
+      color: #38bdf8;
+    }
+
+    .tree-chevron.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .tree-chevron.hidden {
+      visibility: hidden;
+    }
+
+    .tree-icon {
+      font-size: 12px;
+      flex-shrink: 0;
+      width: 16px;
+      text-align: center;
+    }
+
+    .tree-label {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tree-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .tree-badge-dynamic {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .tree-badge-static {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .tree-actions {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-left: auto;
+      opacity: 0.65;
+      transition: opacity 0.12s;
+    }
+
+    .tree-row:hover .tree-actions {
+      opacity: 1.0;
+    }
+
+    .tree-action-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 1px 3px;
+      border-radius: 2px;
+      line-height: 1;
+    }
+
+    .tree-action-btn:hover {
+      color: #38bdf8;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .tree-action-btn.btn-del:hover {
+      color: #ef4444;
+    }
+
+    .tree-children {
+      margin-left: 11px;
+      padding-left: 5px;
+      border-left: 1px dashed rgba(51, 65, 85, 0.65);
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .tree-children.collapsed {
+      display: none;
+    }
+
+    /* ==========================================================================
+       RESIZERS, NLE TIMELINE TOOLS, MULTI-ACTOR STAGING, POSE KEYS & AI DIRECTOR
+       ========================================================================== */
+    .panel {
+      position: relative;
+    }
+
+    .ui-resizer-horizontal {
+      position: absolute;
+      top: -5px;
+      left: 0;
+      right: 0;
+      height: 10px;
+      cursor: ns-resize;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .ui-resizer-horizontal::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 4px;
+      height: 2px;
+      background: transparent;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .ui-resizer-horizontal:hover::before,
+    .ui-resizer-horizontal.is-dragging::before {
+      background: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.85);
+    }
+
+    .ui-resizer-vertical {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      cursor: ew-resize;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .ui-resizer-left-edge {
+      right: -5px;
+    }
+
+    .ui-resizer-right-edge {
+      left: -5px;
+    }
+
+    .ui-resizer-vertical::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 4px;
+      width: 2px;
+      background: transparent;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .ui-resizer-vertical:hover::before,
+    .ui-resizer-vertical.is-dragging::before {
+      background: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.85);
+    }
+
+    .resizer-arrow-pill {
+      opacity: 0;
+      transform: scale(0.85);
+      background: #0f172a;
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 7px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 8px rgba(56, 189, 248, 0.45);
+      pointer-events: none;
+      transition: opacity 0.14s ease, transform 0.14s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      z-index: 65;
+    }
+
+    .ui-resizer-horizontal:hover .resizer-arrow-pill,
+    .ui-resizer-horizontal.is-dragging .resizer-arrow-pill,
+    .ui-resizer-vertical:hover .resizer-arrow-pill,
+    .ui-resizer-vertical.is-dragging .resizer-arrow-pill {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .nle-tool-group {
+      display: inline-flex;
+      align-items: center;
+      background: #070b14;
+      border: 1px solid #1e293b;
+      border-radius: 5px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .nle-tool-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #cbd5e1;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .nle-tool-btn:hover {
+      background: #1e293b;
+      color: #38bdf8;
+      border-color: #334155;
+    }
+
+    .nle-tool-btn.nle-btn-split {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.25);
+    }
+
+    .nle-tool-btn.nle-btn-split:hover {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: #38bdf8;
+    }
+
+    .nle-tool-btn.nle-btn-danger:hover {
+      background: rgba(239, 68, 68, 0.18);
+      color: #fca5a5;
+      border-color: #ef4444;
+    }
+
+    .keyframe-diamond {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      width: 10px;
+      height: 10px;
+      background: #fbbf24;
+      border: 1.5px solid #ffffff;
+      border-radius: 1px;
+      box-shadow: 0 0 6px rgba(251, 191, 36, 0.9);
+      cursor: pointer;
+      z-index: 10;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .keyframe-diamond:hover {
+      background: #ffffff;
+      border-color: #f59e0b;
+      transform: translate(-50%, -50%) rotate(45deg) scale(1.4);
+      box-shadow: 0 0 12px #ffffff;
+    }
+
+    /* Multi-Character Actor Staging */
+    .actor-staging-box {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .actor-tabs-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .actor-tab {
+      flex: 1;
+      padding: 5px 6px;
+      border-radius: 4px;
+      border: 1px solid #1e293b;
+      background: #0f172a;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      color: #94a3b8;
+    }
+    .actor-tab.active-a1 {
+      border-color: #38bdf8;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+    }
+    .actor-tab.active-a2 {
+      border-color: #fb923c;
+      color: #fb923c;
+      background: rgba(251, 146, 60, 0.1);
+      box-shadow: 0 0 8px rgba(251, 146, 60, 0.2);
+    }
+
+    .staging-presets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+
+    .staging-preset-btn {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 9.5px;
+      color: #cbd5e1;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      line-height: 1.25;
+    }
+    .staging-preset-btn:hover {
+      background: #1e293b;
+      border-color: #fb923c;
+      color: #fb923c;
+    }
+
+    .actor2-control-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-actor2-toggle {
+      flex: 1;
+      padding: 5px 8px;
+      border-radius: 4px;
+      border: 1px dashed #334155;
+      background: #0f172a;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      color: #94a3b8;
+      transition: all 0.15s;
+    }
+    .btn-actor2-toggle.active {
+      border-color: #fb923c;
+      color: #fb923c;
+      background: rgba(251, 146, 60, 0.08);
+      border-style: solid;
+    }
+    .btn-actor2-toggle:hover {
+      border-color: #fb923c;
+      color: #fb923c;
+    }
+
+    .actor-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 8px;
+      margin-left: 4px;
+      flex-shrink: 0;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .actor-badge:hover {
+      filter: brightness(1.25);
+      transform: scale(1.05);
+    }
+    .actor-badge-a1 {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .actor-badge-a2 {
+      background: rgba(251, 146, 60, 0.15);
+      color: #fb923c;
+      border: 1px solid rgba(251, 146, 60, 0.3);
+    }
+    .trigger-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 4px;
+      margin-left: 3px;
+      background: rgba(251, 191, 36, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      flex-shrink: 0;
+    }
+    .grab-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 4px;
+      margin-left: 3px;
+      background: rgba(249, 115, 22, 0.18);
+      color: #f97316;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+      flex-shrink: 0;
+    }
+    @keyframes zmpGlowFlash {
+      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.9); border-color: #34d399; }
+      50% { box-shadow: 0 0 22px 6px rgba(52, 211, 153, 0.65); border-color: #34d399; }
+      100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+    .zmp-highlight {
+      animation: zmpGlowFlash 1.2s ease-out 2 !important;
+    }
+    .timeline-actor-filters {
+      display: inline-flex;
+      gap: 3px;
+      margin-left: 6px;
+      align-items: center;
+    }
+    .timeline-filter-btn {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      font-size: 8.5px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .timeline-filter-btn:hover {
+      border-color: #64748b;
+      color: #f8fafc;
+    }
+    .timeline-filter-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+    .timeline-filter-btn.active-a2 {
+      background: rgba(251, 146, 60, 0.2);
+      border-color: #fb923c;
+      color: #fb923c;
+    }
+
+    /* Right Panel Tab switcher & AI Stunt Director */
+    .right-panel-tab.active {
+      color: #38bdf8 !important;
+      border-bottom-color: #38bdf8 !important;
+      background: rgba(56, 189, 248, 0.08) !important;
+    }
+
+    .ai-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #070b14;
+      border: 1px solid #1e293b;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+    }
+
+    .ai-suggestions-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .ai-chip {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .ai-chip:hover {
+      background: #1e293b;
+      border-color: #38bdf8;
+      color: #38bdf8;
+      transform: translateY(-1px);
+    }
+
+    .ai-messages-thread {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+      min-height: 200px;
+    }
+
+    .ai-msg {
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 1.45;
+      max-width: 95%;
+      word-break: break-word;
+    }
+
+    .ai-msg-user {
+      align-self: flex-end;
+      background: #1e3a8a;
+      color: #e0f2fe;
+      border: 1px solid #3b82f6;
+      border-bottom-right-radius: 1px;
+    }
+
+    .ai-msg-assistant {
+      align-self: flex-start;
+      background: #0f172a;
+      color: #f1f5f9;
+      border: 1px solid #1e293b;
+      border-bottom-left-radius: 1px;
+      border-left: 3px solid #38bdf8;
+    }
+
+    .ai-input-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      background: #070b14;
+      border: 1px solid #334155;
+      padding: 5px 8px;
+      border-radius: 6px;
+    }
+    .ai-input-row:focus-within {
+      border-color: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+
+    .ai-input-field {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #f8fafc;
+      font-size: 11px;
+      outline: none;
+      padding: 4px;
+    }
+
+    .btn-ai-send {
+      background: #0284c7;
+      border: none;
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-ai-send:hover {
+      background: #0369a1;
+    }
+
+    .ai-mode-switch-row {
+      display: flex;
+      background: #070b14;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .ai-mode-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 5px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.14s ease;
+    }
+
+    .ai-mode-btn.active {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.45);
+      color: #38bdf8;
+    }
+
+    .ai-mode-btn.active-motion {
+      background: rgba(236, 72, 153, 0.15);
+      border-color: rgba(236, 72, 153, 0.5);
+      color: #f472b6;
+    }
+
+    .ai-tag-autocomplete {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      max-height: 230px;
+      overflow-y: auto;
+      background: #0b1120;
+      border: 1px solid #38bdf8;
+      border-radius: 6px;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.85), 0 0 12px rgba(56, 189, 248, 0.25);
+      z-index: 120;
+      display: none;
+      flex-direction: column;
+      padding: 4px;
+      gap: 2px;
+    }
+
+    .ai-tag-autocomplete.open {
+      display: flex;
+    }
+
+    .ai-tag-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 10.5px;
+      color: #e2e8f0;
+      transition: background 0.1s ease;
+      gap: 6px;
+    }
+
+    .ai-tag-item:hover,
+    .ai-tag-item.selected {
+      background: rgba(56, 189, 248, 0.18);
+      color: #ffffff;
+    }
+
+    .ai-tag-code {
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 10.5px;
+      color: #38bdf8;
+      background: #070b14;
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid #1e293b;
+    }
+
+    .ai-tag-cat-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: #1e293b;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      width: 440px;
+      max-width: 90vw;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden File Inputs -->
+  <input type="file" id="file-input" accept=".nmc,.nme,.nmb,.ens" style="display: none;">
+  <input type="file" id="input-mixamo-file" accept=".fbx,.glb,.gltf,.bvh" style="display: none;">
+  <input type="file" id="input-anim-file" accept=".fbx,.glb,.gltf,.bvh" style="display: none;">
+  <input type="file" id="anim-file-input" accept=".fbx,.bvh,.glb,.gltf" style="display: none;">
+
+  <!-- Floating 2nd-Level Flyout Portal for Left Panel Behaviour Categories -->
+  <div id="behavior-flyout-portal"></div>
+
+  <!-- Global Dynamic Floating Setting & Item Tooltip -->
+  <div id="opendms-floating-tooltip"></div>
+
+  <!-- ==========================================================================
+       MODERN 3D SOFTWARE TOP MENU BAR
+       ========================================================================== -->
+  <header class="dcc-header">
+    <div class="header-left">
+      <div class="brand">
+        <span>OpenDMS</span>
+        <span class="brand-badge">2.7 Studio</span>
+      </div>
+
+      <nav class="dcc-menubar" id="dcc-menubar">
+
+        <!-- 1. FILE MENU -->
+        <div class="dcc-menu-item">
+          <button class="dcc-menu-trigger">File</button>
+          <div class="dcc-dropdown">
+            <div class="dcc-menu-section-label">Scene &amp; Assets</div>
+            <button class="dcc-menu-option" id="menu-new-scene">
+              <span class="dcc-option-left"><span class="dcc-option-icon">📄</span><span>New Blank Scene (T-Pose)</span></span>
+            </button>
+            <button class="dcc-menu-option" onclick="document.getElementById('file-input').click()">
+              <span class="dcc-option-left"><span class="dcc-option-icon">📁</span><span>Import DMS / NMC File (.nmc/.ens)...</span></span>
+            </button>
+            <button class="dcc-menu-option" onclick="document.getElementById('input-mixamo-file').click()">
+              <span class="dcc-option-left"><span class="dcc-option-icon">📂</span><span>Import Character Rig (.fbx/.glb)...</span></span>
+            </button>
+            <button class="dcc-menu-option" onclick="document.getElementById('input-anim-file').click()">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🎬</span><span>Import &amp; Retarget Animation (.fbx/.bvh)...</span></span>
+            </button>
+            <div class="dcc-menu-divider"></div>
+            <div class="dcc-menu-section-label">DCC Pipeline Export</div>
+            <button class="dcc-menu-option" id="btn-export-bvh">
+              <span class="dcc-option-left"><span class="dcc-option-icon">📤</span><span>Export BVH Armature Motion (.bvh)</span></span>
+              <span class="dcc-option-shortcut">Blender/UE5</span>
+            </button>
+            <button class="dcc-menu-option" id="btn-export-glb-scene">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🌐</span><span>Export Animated Scene (.glb)</span></span>
+              <span class="dcc-option-shortcut">Full Scene</span>
+            </button>
+            <button class="dcc-menu-option" id="btn-export-glb-armature">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🦴</span><span>Export Armature &amp; Motion (.glb)</span></span>
+              <span class="dcc-option-shortcut">Skinned Rig</span>
+            </button>
+            <button class="dcc-menu-option" id="btn-export-json">
+              <span class="dcc-option-left"><span class="dcc-option-icon">💾</span><span>Export Simulation Session (.json)</span></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. EDIT MENU -->
+        <div class="dcc-menu-item">
+          <button class="dcc-menu-trigger">Edit</button>
+          <div class="dcc-dropdown">
+            <button class="dcc-menu-option" id="menu-undo">
+              <span class="dcc-option-left"><span class="dcc-option-icon">↩️</span><span id="menu-undo-text">Undo</span></span>
+              <span class="dcc-option-shortcut">Ctrl+Z</span>
+            </button>
+            <button class="dcc-menu-option" id="menu-redo">
+              <span class="dcc-option-left"><span class="dcc-option-icon">↪️</span><span id="menu-redo-text">Redo</span></span>
+              <span class="dcc-option-shortcut">Ctrl+Y</span>
+            </button>
+            <div class="dcc-menu-divider"></div>
+            <button class="dcc-menu-option" id="menu-revert-tpose">
+              <span class="dcc-option-left"><span class="dcc-option-icon">⏮</span><span>Revert to Pristine T-Pose</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-reset-origin">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🎯</span><span>Reset Character Position (0,0,0)</span></span>
+            </button>
+            <div class="dcc-menu-divider"></div>
+            <button class="dcc-menu-option" id="menu-split-layer">
+              <span class="dcc-option-left"><span class="dcc-option-icon">✂️</span><span>Split Clip at Playhead</span></span>
+              <span class="dcc-option-shortcut">S</span>
+            </button>
+            <button class="dcc-menu-option" id="menu-trim-in">
+              <span class="dcc-option-left"><span class="dcc-option-icon">⇤</span><span>Trim Clip Start to Playhead</span></span>
+              <span class="dcc-option-shortcut">[</span>
+            </button>
+            <button class="dcc-menu-option" id="menu-trim-out">
+              <span class="dcc-option-left"><span class="dcc-option-icon">⇥</span><span>Trim Clip End to Playhead</span></span>
+              <span class="dcc-option-shortcut">]</span>
+            </button>
+            <button class="dcc-menu-option" id="menu-duplicate-layer">
+              <span class="dcc-option-left"><span class="dcc-option-icon">⧉</span><span>Duplicate Selected Clip</span></span>
+              <span class="dcc-option-shortcut">D</span>
+            </button>
+            <button class="dcc-menu-option" id="menu-fit-timeline">
+              <span class="dcc-option-left"><span class="dcc-option-icon">↔</span><span>Fit Timeline to Active Clips</span></span>
+            </button>
+            <div class="dcc-menu-divider"></div>
+            <button class="dcc-menu-option" id="menu-delete-selected-layer">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🗑️</span><span>Delete Selected Timeline Track</span></span>
+              <span class="dcc-option-shortcut">Del</span>
+            </button>
+            <button class="dcc-menu-option" id="menu-clear-layers">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🗑️</span><span>Clear All Timeline Tracks</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-clear-props">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🧹</span><span>Clear All Physical Props</span></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. CHARACTER MENU (with 2nd-level flyouts) -->
+        <div class="dcc-menu-item">
+          <button class="dcc-menu-trigger">Character</button>
+          <div class="dcc-dropdown">
+            <div class="dcc-submenu-row">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🧍</span><span>Character Rig / Visual Skin</span></span>
+              <span class="dcc-submenu-arrow">▸</span>
+              <div class="dcc-flyout-2nd">
+                <div class="dcc-menu-section-label">Active Viewport Skin</div>
+                <button class="dcc-menu-option" id="menu-model-mannequin">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🤖</span><span>Studio Biomechanical Mannequin (Default)</span></span>
+                </button>
+                <button class="dcc-menu-option" id="menu-model-mixamo">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🏃</span><span>Mixamo Humanoid (X Bot)</span></span>
+                </button>
+                <button class="dcc-menu-option" id="menu-model-sam">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🧍</span><span>Sam Humanoid (sam_human.fbx)</span></span>
+                </button>
+                <div class="dcc-menu-divider"></div>
+                <button class="dcc-menu-option" onclick="document.getElementById('input-mixamo-file').click()">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">📂</span><span>Load Custom Skinned FBX / GLB...</span></span>
+                </button>
+                <button class="dcc-menu-option" onclick="document.getElementById('input-anim-file').click()">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🎬</span><span>Import &amp; Retarget Animation (.fbx/.bvh)...</span></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="dcc-submenu-row">
+              <span class="dcc-option-left"><span class="dcc-option-icon">💪</span><span>Muscle Rig Calibration</span></span>
+              <span class="dcc-submenu-arrow">▸</span>
+              <div class="dcc-flyout-2nd">
+                <div class="dcc-menu-section-label">Effector PD Stiffness</div>
+                <button class="dcc-menu-option" data-stiff-preset="500">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⚡</span><span>High Tone / Athletic (500 Nm)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-stiff-preset="300">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⚖️</span><span>Standard Calibration (300 Nm)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-stiff-preset="150">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🍃</span><span>Relaxed / Fatigued (150 Nm)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-stiff-preset="60">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🍂</span><span>Limp / Low Muscle Tone (60 Nm)</span></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. ANIMATION & EVENTS MENU -->
+        <div class="dcc-menu-item">
+          <button class="dcc-menu-trigger">Animation</button>
+          <div class="dcc-dropdown">
+            <div class="dcc-menu-section-label">Scene Duration / Timeline Length</div>
+            <div class="dcc-submenu-row">
+              <span class="dcc-option-left"><span class="dcc-option-icon">⏱️</span><span>Set Scene Duration</span></span>
+              <span class="dcc-submenu-arrow">▸</span>
+              <div class="dcc-flyout-2nd">
+                <div class="dcc-menu-section-label">Duration Presets (@ 60fps)</div>
+                <button class="dcc-menu-option" data-duration-preset="120">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⚡</span><span>120 Frames (2.0s - Short)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-duration-preset="240">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⏱️</span><span>240 Frames (4.0s - Default)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-duration-preset="360">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⏱️</span><span>360 Frames (6.0s)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-duration-preset="480">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⏱️</span><span>480 Frames (8.0s - Medium)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-duration-preset="720">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⏱️</span><span>720 Frames (12.0s - Long)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-duration-preset="1200">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⏱️</span><span>1200 Frames (20.0s - Extended)</span></span>
+                </button>
+                <div class="dcc-menu-divider"></div>
+                <button class="dcc-menu-option" id="menu-custom-duration">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">✏️</span><span>Custom Frame Count...</span></span>
+                </button>
+              </div>
+            </div>
+            <div class="dcc-menu-divider"></div>
+            <div class="dcc-menu-section-label">Priority Kinematic Tracks</div>
+            <button class="dcc-menu-option" id="menu-add-walk-anim">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🏃</span><span>+ Add Walk Cycle (Frames 0–60)</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-open-mocap-library">
+              <span class="dcc-option-left"><span class="dcc-option-icon">📚</span><span>Open 48-Clip Mocap Library...</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-text-to-anim-ai">
+              <span class="dcc-option-left"><span class="dcc-option-icon">✨</span><span>Text-to-Animation AI (@Tag Compiler)...</span></span>
+            </button>
+            <button class="dcc-menu-option" onclick="document.getElementById('input-anim-file').click()">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🎬</span><span>+ Import &amp; Retarget Animation (.fbx/.bvh)...</span></span>
+            </button>
+            <div class="dcc-menu-divider"></div>
+            <div class="dcc-menu-section-label">Active Pose &amp; Manual Keyframing</div>
+            <button class="dcc-menu-option" id="menu-toggle-pose">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🦴</span><span>Toggle Active Pose Mode (FK/IK)</span></span>
+              <span class="dcc-option-shortcut">P</span>
+            </button>
+            <button class="dcc-menu-option" id="menu-key-pose">
+              <span class="dcc-option-left"><span class="dcc-option-icon">◆</span><span>Record Pose Keyframe at Playhead</span></span>
+              <span class="dcc-option-shortcut">I</span>
+            </button>
+            <button class="dcc-menu-option" id="menu-toggle-autokey">
+              <span class="dcc-option-left"><span class="dcc-option-icon">⏺️</span><span>Toggle Auto-Keyframing</span></span>
+            </button>
+            <div class="dcc-menu-divider"></div>
+            <div class="dcc-menu-section-label">Simulation Timeline Events</div>
+            <button class="dcc-menu-option" id="menu-add-impulse">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🎯</span><span>+ Add Force Event on Bone</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-add-pose-event">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🥋</span><span>+ Add Active Pose Event</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-add-constraint-event">
+              <span class="dcc-option-left"><span class="dcc-option-icon">📌</span><span>+ Add Bone Constraint / Pin</span></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 5. BEHAVIOURS MENU (Cascading 2nd-Level Flyouts populated dynamically from ENDORPHIN_BEHAVIOR_CATEGORIES) -->
+        <div class="dcc-menu-item">
+          <button class="dcc-menu-trigger" style="color: #38bdf8; font-weight: 600;">Behaviours</button>
+          <div class="dcc-dropdown" id="topbar-behaviors-dropdown">
+            <!-- Dynamically populated with Category ▸ 2nd-Level Behaviour Flyouts -->
+          </div>
+        </div>
+
+        <!-- 6. ENVIRONMENT & PROPS MENU -->
+        <div class="dcc-menu-item">
+          <button class="dcc-menu-trigger">Environment</button>
+          <div class="dcc-dropdown">
+            <div class="dcc-submenu-row">
+              <span class="dcc-option-left"><span class="dcc-option-icon">📦</span><span>Spawn Physical Prop</span></span>
+              <span class="dcc-submenu-arrow">▸</span>
+              <div class="dcc-flyout-2nd">
+                <div class="dcc-menu-section-label">Primitive Shapes &amp; Props</div>
+                <button class="dcc-menu-option" id="menu-prop-box">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🧊</span><span>Spawn Box / Cube</span></span>
+                </button>
+                <button class="dcc-menu-option" id="menu-prop-sphere">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">⚽</span><span>Spawn Sphere / Ball</span></span>
+                </button>
+                <button class="dcc-menu-option" id="menu-prop-cylinder">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🥫</span><span>Spawn Cylinder / Pillar</span></span>
+                </button>
+                <button class="dcc-menu-option" id="menu-prop-capsule">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">💊</span><span>Spawn Capsule / Pill</span></span>
+                </button>
+                <div class="dcc-menu-separator"></div>
+                <div class="dcc-menu-section-label">Simulation Obstacle Objects</div>
+                <button class="dcc-menu-option" id="menu-prop-crate">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">📦</span><span>Spawn Hurdle Crate</span></span>
+                </button>
+                <button class="dcc-menu-option" id="menu-prop-step">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🪜</span><span>Spawn Stepping Platform</span></span>
+                </button>
+                <button class="dcc-menu-option" id="menu-prop-projectile">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">💣</span><span>Launch Cannonball Projectile</span></span>
+                </button>
+                <button class="dcc-menu-option" id="menu-prop-fluid">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🌊</span><span>Spawn Water Volume (Fluid 2.7)</span></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="dcc-submenu-row">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🧱</span><span>Ground Surface Material (CMF)</span></span>
+              <span class="dcc-submenu-arrow">▸</span>
+              <div class="dcc-flyout-2nd">
+                <div class="dcc-menu-section-label">Contact Friction &amp; Restitution</div>
+                <button class="dcc-menu-option" data-ground-mat="concrete">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🧱</span><span>Default Concrete (Friction 1.4)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-ground-mat="ice">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🧊</span><span>Slick Ice (Friction 0.03)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-ground-mat="rubber">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🏀</span><span>Bouncy Rubber (Restitution 0.72)</span></span>
+                </button>
+                <button class="dcc-menu-option" data-ground-mat="sponge">
+                  <span class="dcc-option-left"><span class="dcc-option-icon">🧽</span><span>Sponge Cushion (Friction 1.6)</span></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="dcc-menu-divider"></div>
+            <button class="dcc-menu-option" id="menu-env-clear-props">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🧹</span><span>Clear All Scene Props</span></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 7. PRESETS MENU -->
+        <div class="dcc-menu-item">
+          <button class="dcc-menu-trigger">Presets</button>
+          <div class="dcc-dropdown">
+            <div class="dcc-menu-section-label">Quick Simulation Scenarios</div>
+            <button class="dcc-menu-option" id="menu-preset-walk-trip">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🚶</span><span>Walk &rarr; Trip &rarr; Catch Fall &rarr; Rest</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-preset-jog-hit">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🏃</span><span>Athletic Jog &rarr; Heavy Hit &rarr; Flip</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-preset-walk-stumble">
+              <span class="dcc-option-left"><span class="dcc-option-icon">💫</span><span>Walk &rarr; Push &rarr; Stagger Recovery</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-preset-stalk-trip">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🕵️</span><span>Cautious Stalk &rarr; Snag Trip &rarr; Dive</span></span>
+            </button>
+            <div class="dcc-menu-divider"></div>
+            <button class="dcc-menu-option" id="menu-preset-ragdoll">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🍂</span><span>Pure Ragdoll Drop (Blank Timeline)</span></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 8. VIEW MENU -->
+        <div class="dcc-menu-item">
+          <button class="dcc-menu-trigger">View</button>
+          <div class="dcc-dropdown">
+            <div class="dcc-menu-section-label">Panels &amp; Workspace</div>
+            <button class="dcc-menu-option" id="menu-view-outliner">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🌲</span><span>Scene Outliner (Scene Object Tree)</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-view-library">
+              <span class="dcc-option-left"><span class="dcc-option-icon">📚</span><span>DMS Behaviour Library</span></span>
+            </button>
+            <div class="dcc-menu-divider"></div>
+            <div class="dcc-menu-section-label">Viewport Overlays &amp; Gizmos</div>
+            <button class="dcc-menu-option" id="menu-toggle-gizmos">
+              <span class="dcc-option-left"><span class="dcc-option-icon">👁️</span><span>Toggle Biomechanical CoM / BoS Gizmos</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-transform-move">
+              <span class="dcc-option-left"><span class="dcc-option-icon">✥</span><span>Translate / Move Gizmo (W)</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-transform-rotate">
+              <span class="dcc-option-left"><span class="dcc-option-icon">↻</span><span>Rotate Gizmo (E)</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-transform-scale">
+              <span class="dcc-option-left"><span class="dcc-option-icon">⤢</span><span>Scale Gizmo (R)</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-toggle-viewport-bone-tree">
+              <span class="dcc-option-left"><span class="dcc-option-icon">🦴</span><span>Toggle Viewport Skeleton Tree (HUD)</span></span>
+            </button>
+            <button class="dcc-menu-option" id="menu-toggle-help">
+              <span class="dcc-option-left"><span class="dcc-option-icon">💡</span><span>Toggle Viewport Help Overlay</span></span>
+            </button>
+          </div>
+        </div>
+
+      </nav>
+    </div>
+
+    <!-- Right Quick Status & Actions -->
+    <div class="header-right">
+      <span id="sim-status-badge" class="status-badge status-authoring">AUTHORING MODE</span>
+
+      <!-- Multi-Physics Engine Selector -->
+      <div style="display: flex; align-items: center; gap: 5px;" title="Select Active Physics Engine (Real-Time Physics Solver)">
+        <span style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px;">PHYSICS:</span>
+        <select id="physics-engine-select" style="background: #070b14; border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">
+          <option value="rapier" selected>Rapier 3D (Default)</option>
+          <option value="mujoco">MuJoCo WASM</option>
+          <option value="jolt">Jolt Physics</option>
+          <option value="physx">NVIDIA PhysX 5</option>
+        </select>
+      </div>
+
+      <!-- 3D Transform Mode Switcher (W: Translate, E: Rotate, R: Scale) -->
+      <div class="transform-tool-group" title="Select 3D Transform Mode (W: Move, E: Rotate, R: Scale)">
+        <button class="transform-mode-btn active" id="btn-transform-move" title="Translate / Move Object (W)">
+          <span>✥ Move (W)</span>
+        </button>
+        <button class="transform-mode-btn" id="btn-transform-rotate" title="Rotate Object (E)">
+          <span>↻ Rotate (E)</span>
+        </button>
+        <button class="transform-mode-btn" id="btn-transform-scale" title="Scale Object (R)">
+          <span>⤢ Scale (R)</span>
+        </button>
+      </div>
+
+      <button class="btn" id="btn-toggle-pose-mode" style="border-color: #a855f7; color: #d8b4fe; background: rgba(168, 85, 247, 0.1);" title="Toggle Active Pose Mode (P)">
+        🎭 Pose Mode: OFF
+      </button>
+
+      <button class="btn" id="btn-open-mocap-drawer" style="border-color: #10b981; color: #6ee7b7; background: rgba(16, 185, 129, 0.15); font-weight: 600;" title="Open 48-Clip Animation Library & AI Motion Generator">
+        🏃 Animation Library (48 Clips &amp; AI)
+      </button>
+
+      <button class="btn" id="btn-toggle-gizmos" style="border-color: #38bdf8; color: #38bdf8;" title="Toggle Center of Mass & Support Base Gizmos (G)">
+        🎯 Gizmos: ON
+      </button>
+
+      <button class="btn" id="btn-header-balance-jump" style="border-color: #34d399; color: #34d399; background: rgba(52, 211, 153, 0.12); font-weight: 600;" title="Inspect Biomechanical Dynamic Balance & Counter-Weighing Controls">
+        ⚖️ Balance: ON
+      </button>
+
+      <button class="btn btn-simulate" id="btn-resim" title="Re-bake physics simulation from Frame 0 (Ctrl+Space)">
+        🔄 Re-Simulate
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       MAIN 3D STUDIO WORKSPACE
+       ========================================================================== -->
+  <div class="workspace">
+
+    <!-- Left Panel: Outliner & Cascading Behaviour Menus -->
+    <div class="panel panel-left" style="width: 295px;">
+      <div class="panel-header" style="padding: 0; background: #070b14; border-bottom: 1px solid #1e293b;">
+        <div class="panel-tab-bar" style="display: flex; width: 100%;">
+          <button class="panel-tab-btn active" id="tab-btn-library">
+            <span>📚</span><span>DMS Library</span>
+          </button>
+          <button class="panel-tab-btn" id="tab-btn-outliner">
+            <span>🌲</span><span>Scene Outliner</span>
+            <span class="outliner-count-badge" id="outliner-item-count">24</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: SCENE OBJECT TREE -->
+      <div class="panel-body" id="panel-body-outliner" style="display: none;">
+        <div class="outliner-toolbar">
+          <input type="text" class="outliner-search-input" id="outliner-search-input" placeholder="🔍 Search scene objects &amp; props...">
+          <div class="outliner-quick-actions">
+            <button class="outliner-btn-mini" id="outliner-expand-all" title="Expand all tree branches">
+              <span>⊞</span><span>Expand All</span>
+            </button>
+            <button class="outliner-btn-mini" id="outliner-collapse-all" title="Collapse all tree branches">
+              <span>⊟</span><span>Collapse All</span>
+            </button>
+            <button class="outliner-btn-mini" id="outliner-focus-selected" title="Focus viewport camera on selected object">
+              <span>🎯</span><span>Focus</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="outliner-tree-container" id="outliner-tree-container">
+          <!-- Dynamically populated scene and skeleton hierarchy -->
+        </div>
+      </div>
+
+      <!-- TAB 2: DMS BEHAVIOURS & PRIMITIVE PROPS LIBRARY -->
+      <div class="panel-body" id="panel-body-library" style="display: flex;">
+
+        <!-- MULTI-CHARACTER ACTOR STAGING (OpenDMS Multi-Character) -->
+        <div class="control-group" style="margin-bottom: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="color: #fb923c;">⚔️ Multi-Character Staging</label>
+            <span id="actor-count-badge" style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: #1e293b; color: #94a3b8; font-weight: 700;">1 ACTOR</span>
+          </div>
+          <div class="actor-staging-box">
+            <div class="actor-tabs-row">
+              <div class="actor-tab active-a1" id="actor-tab-1" title="Switch active actor to Hero (Actor 1)">🔵 A1 Hero</div>
+              <div class="actor-tab" id="actor-tab-2" title="Switch active actor to Opponent (Actor 2)" style="opacity:0.4;">🟠 A2 Opponent</div>
+            </div>
+            <div class="actor2-control-row">
+              <button class="btn-actor2-toggle" id="btn-toggle-actor2">＋ Add Opponent (Actor 2)</button>
+            </div>
+            <div style="font-size: 9.5px; color: #64748b; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;">Viewport Staging Presets</div>
+            <div class="staging-presets-grid">
+              <button class="staging-preset-btn" id="btn-stage-face-to-face" title="Face-to-Face (1.6m apart)">⚔️ Face-to-Face (1.6m)</button>
+              <button class="staging-preset-btn" id="btn-stage-tackle-runup" title="Tackle Run-Up (3.0m apart)">🏈 Tackle Run-Up (3.0m)</button>
+              <button class="staging-preset-btn" id="btn-stage-side-by-side" title="Side-by-Side (1.0m apart)">👥 Side-by-Side (1.0m)</button>
+              <button class="staging-preset-btn" id="btn-stage-pursue" title="Pursue Behind (2.0m)">🏃 Pursue Behind (2.0m)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. PRIORITY ANIMATION, FORCE & CONSTRAINT EVENTS -->
+        <div class="control-group">
+          <label>Timeline Events &amp; Poses</label>
+          <button class="btn-add-layer" id="btn-add-walk-anim">
+            <span>🏃</span>
+            <span>+ Walk Cycle (Frames 0–60)</span>
+          </button>
+          <button class="btn-add-layer" id="btn-add-pose-track" style="border-color: rgba(168, 85, 247, 0.45); color: #d8b4fe; background: rgba(168, 85, 247, 0.08);" title="Add Manual Keyframed Active Pose Track (Motorized / Kinematic)">
+            <span>🦴</span>
+            <span>+ Active Pose Track (Manual Keys)</span>
+          </button>
+          <button class="btn-add-layer" id="btn-open-mocap-drawer-left" style="border-color: rgba(16, 185, 129, 0.45); color: #6ee7b7; background: rgba(16, 185, 129, 0.08);" title="Browse 48 Bundled Animation Clips & AI Motion Generator">
+            <span>🏃</span>
+            <span>+ Animation Library (48 Clips &amp; AI)</span>
+          </button>
+          <button class="btn-add-layer" id="btn-import-retarget-anim" style="border-color: rgba(56, 189, 248, 0.45); color: #7dd3fc; background: rgba(56, 189, 248, 0.08);" title="Import Mixamo FBX (With or Without Skin), GLB/GLTF, or BVH animation and retarget onto the active character">
+            <span>🎬</span>
+            <span>+ Import / Retarget Animation (.fbx/.bvh)</span>
+          </button>
+          <button class="btn-add-layer" id="btn-add-impulse" style="border-color: rgba(244, 63, 94, 0.45); color: #fda4af; background: rgba(244, 63, 94, 0.08);">
+            <span>🎯</span>
+            <span>+ Force Event on Bone</span>
+          </button>
+          <button class="btn-add-layer" id="btn-add-pose-event" style="border-color: rgba(236, 72, 153, 0.45); color: #f472b6; background: rgba(236, 72, 153, 0.08);">
+            <span>🥋</span>
+            <span>+ Active Pose Event</span>
+          </button>
+          <button class="btn-add-layer" id="btn-add-constraint-event" style="border-color: rgba(16, 185, 129, 0.45); color: #6ee7b7; background: rgba(16, 185, 129, 0.08);">
+            <span>📌</span>
+            <span>+ Bone Constraint / Pin</span>
+          </button>
+          <button class="btn-add-layer" id="btn-add-hold-constraint" style="border-color: rgba(236, 72, 153, 0.45); color: #f472b6; background: rgba(236, 72, 153, 0.08);">
+            <span>🧲</span>
+            <span>+ Proximity Hold Constraint</span>
+          </button>
+        </div>
+
+        <!-- 2. QUICK BEHAVIOURS (EXPANDED IN TOP MENU 'BEHAVIOURS') -->
+        <div class="control-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="color: #38bdf8;">Quick Behaviours</label>
+            <span style="font-size: 9px; color: #64748b;">Full Suite in Top Menu ▾</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button class="btn-add-layer" onclick="window.addBehaviorLayer && window.addBehaviorLayer('catchFall')" style="border-color: rgba(56, 189, 248, 0.4); color: #7dd3fc; padding: 5px 6px;" title="Catch Fall behaviour">
+              <span>🛡️</span><span>Catch Fall</span>
+            </button>
+            <button class="btn-add-layer" onclick="window.addBehaviorLayer && window.addBehaviorLayer('headProtect')" style="border-color: rgba(244, 63, 94, 0.4); color: #fda4af; padding: 5px 6px;" title="Protect Head behaviour">
+              <span>🤕</span><span>Protect Head</span>
+            </button>
+            <button class="btn-add-layer" onclick="window.addBehaviorLayer && window.addBehaviorLayer('stagger')" style="border-color: rgba(245, 158, 11, 0.4); color: #fde68a; padding: 5px 6px;" title="Stagger Steps behaviour">
+              <span>💫</span><span>Stagger Steps</span>
+            </button>
+            <button class="btn-add-layer" onclick="window.addBehaviorLayer && window.addBehaviorLayer('tackle')" style="border-color: rgba(168, 85, 247, 0.4); color: #d8b4fe; padding: 5px 6px;" title="Tackle Charge behaviour">
+              <span>🏈</span><span>Tackle Charge</span>
+            </button>
+          </div>
+          <div class="cascade-menu-list" id="left-behavior-cascade" style="display: none;">
+            <!-- Hidden container to preserve main.js dynamic flyout registration -->
+          </div>
+        </div>
+
+        <!-- 3. PHYSICAL PROPS & PRIMITIVE SHAPES -->
+        <div class="control-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label>Scene Props &amp; Primitives</label>
+            <span style="font-size: 9px; color: #f59e0b;">Dynamic / Static</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;">
+            <button class="btn-add-layer" id="btn-prop-box" style="border-color: rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 5px 6px;" title="Spawn Box / Cube">
+              <span>🧊</span><span>Box</span>
+            </button>
+            <button class="btn-add-layer" id="btn-prop-sphere" style="border-color: rgba(225, 29, 72, 0.4); color: #fda4af; padding: 5px 6px;" title="Spawn Sphere / Ball">
+              <span>⚽</span><span>Sphere</span>
+            </button>
+            <button class="btn-add-layer" id="btn-prop-cylinder" style="border-color: rgba(5, 150, 105, 0.4); color: #6ee7b7; padding: 5px 6px;" title="Spawn Cylinder / Pillar">
+              <span>🥫</span><span>Cylinder</span>
+            </button>
+            <button class="btn-add-layer" id="btn-prop-capsule" style="border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc; padding: 5px 6px;" title="Spawn Capsule / Pill">
+              <span>💊</span><span>Capsule</span>
+            </button>
+            <button class="btn-add-layer" id="btn-prop-crate" style="border-color: rgba(245, 158, 11, 0.4); color: #fde68a; padding: 5px 6px;" title="Spawn Hurdle Crate">
+              <span>📦</span><span>Crate</span>
+            </button>
+            <button class="btn-add-layer" id="btn-prop-step" style="border-color: rgba(100, 116, 139, 0.4); color: #cbd5e1; padding: 5px 6px;" title="Spawn Raised Platform">
+              <span>🪜</span><span>Platform</span>
+            </button>
+            <button class="btn-add-layer" id="btn-prop-projectile" style="border-color: rgba(244, 63, 94, 0.4); color: #fda4af; padding: 5px 6px;" title="Launch Cannonball Projectile">
+              <span>💣</span><span>Cannonball</span>
+            </button>
+            <button class="btn-add-layer" id="btn-prop-fluid" style="border-color: rgba(2, 132, 199, 0.4); color: #7dd3fc; padding: 5px 6px;" title="Spawn Water Pool (Buoyancy & Drag)">
+              <span>🌊</span><span>Water Pool</span>
+            </button>
+          </div>
+          <button class="btn-add-layer" id="btn-clear-props" style="border-color: #334155; color: #94a3b8; justify-content: center; padding: 5px; margin-top: 5px;">
+            <span>🧹</span>
+            <span>Clear All Physical Props</span>
+          </button>
+        </div>
+
+        <!-- 4. SURFACE MATERIAL & FORCE FIELDS -->
+        <div class="control-group">
+          <label>Surface Material (CMF)</label>
+          <select id="ground-material-select" style="width: 100%; background: #070b14; border: 1px solid #1e293b; color: #38bdf8; padding: 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+            <option value="concrete">Default Concrete (Friction 1.4)</option>
+            <option value="default">DMS High-Friction (Friction 1.4, Rest 0.2)</option>
+            <option value="tarmac">High-Grip Tarmac (Friction 2.0)</option>
+            <option value="ice">Slick Ice (Friction 0.05 - Slips!)</option>
+            <option value="rubber">Bouncy Rubber (Friction 2.5, Rest 0.85)</option>
+            <option value="sponge">Sponge Cushion (Friction 1.6, Soft)</option>
+            <option value="steel">Polished Steel (Friction 0.8, Rest 0.6)</option>
+            <option value="skin">Human Skin CMF (Friction 1.2)</option>
+            <option value="velcro">Infinite-Grip Velcro (Friction 10.0)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Pusher Wind Field (2.7): <span id="wind-val" style="color: #38bdf8;">0 N</span></label>
+          <input type="range" id="wind-slider" min="0" max="40" value="0" style="width: 100%;">
+        </div>
+
+        <div class="control-group">
+          <label>Twister Vortex Field (2.7): <span id="twister-val" style="color: #c084fc;">0 rad/s</span></label>
+          <input type="range" id="twister-slider" min="0" max="30" value="0" style="width: 100%; accent-color: #c084fc;">
+        </div>
+
+        <div class="control-group">
+          <label>Muscle Rig Calibration: <span id="stiff-val" style="color: #34d399;">300 Nm</span></label>
+          <input type="range" id="stiffness-slider" min="50" max="600" value="300" style="width: 100%; accent-color: #34d399;">
+        </div>
+
+        <!-- 5. QUICK PRESETS -->
+        <div class="control-group" style="margin-top: 4px;">
+          <label>Quick Timeline Presets</label>
+          <button class="btn-add-layer" id="btn-preset-walk-trip" style="border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; background: rgba(59, 130, 246, 0.08);">
+            <span>🚶</span>
+            <span>Walk &rarr; Trip &rarr; Catch Fall</span>
+          </button>
+          <button class="btn-add-layer" id="btn-preset-jog-hit" style="border-color: rgba(2, 132, 199, 0.4); color: #7dd3fc; background: rgba(2, 132, 199, 0.08);">
+            <span>🏃</span>
+            <span>Athletic Jog &rarr; Heavy Hit</span>
+          </button>
+          <button class="btn-add-layer" id="btn-preset-walk-stumble" style="border-color: rgba(245, 158, 11, 0.4); color: #fcd34d; background: rgba(245, 158, 11, 0.08);">
+            <span>💫</span>
+            <span>Walk &rarr; Push &rarr; Stagger</span>
+          </button>
+          <button class="btn-add-layer" id="btn-preset-idle-stance" style="border-color: rgba(14, 165, 233, 0.4); color: #7dd3fc; background: rgba(14, 165, 233, 0.08);">
+            <span>🧍</span>
+            <span>Natural Standing Stance</span>
+          </button>
+          <button class="btn-add-layer" id="btn-preset-dive-tackle" style="border-color: rgba(245, 158, 11, 0.4); color: #fde68a; background: rgba(245, 158, 11, 0.08);">
+            <span>🏈</span>
+            <span>Obstacle Jump &amp; Dive &rarr; Tackle</span>
+          </button>
+          <button class="btn-add-layer" id="btn-preset-storm-fluid" style="border-color: rgba(2, 132, 199, 0.4); color: #7dd3fc; background: rgba(2, 132, 199, 0.08);">
+            <span>🌊</span>
+            <span>Pusher Wind &rarr; Water Pool Swim</span>
+          </button>
+          <button class="btn-add-layer" id="btn-preset-ragdoll" style="border-color: rgba(168, 85, 247, 0.4); color: #d8b4fe; background: rgba(168, 85, 247, 0.08);">
+            <span>🍂</span>
+            <span>Pure Ragdoll Drop</span>
+          </button>
+          <button class="btn-add-layer" id="btn-clear-layers" style="border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; background: rgba(239, 68, 68, 0.06);">
+            <span>🗑️</span>
+            <span>Clear All Timeline Layers</span>
+          </button>
+        </div>
+
+      </div>
+      <!-- Draggable Right Edge Resizer for Left Panel -->
+      <div id="resizer-left-panel" class="ui-resizer-vertical ui-resizer-left-edge" title="Drag left/right to resize panel">
+        <span class="resizer-arrow-pill">↔</span>
+      </div>
+    </div>
+
+    <!-- 3D Simulation Viewport -->
+    <div id="viewport-container">
+      <!-- Left Viewport Help Tooltip Overlay -->
+      <div class="viewport-overlay" id="viewport-tooltip" style="pointer-events: auto; min-width: 220px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <strong style="color: #e2e8f0;">💡 Viewport &amp; Studio Guide</strong>
+          <div style="display: flex; gap: 4px;">
+            <button id="btn-min-tooltip" title="Minimize / Expand Help" style="background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 3px; width: 20px; height: 20px; cursor: pointer; font-size: 11px; line-height: 1;">&minus;</button>
+            <button id="btn-close-tooltip" title="Close Help" style="background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 3px; width: 20px; height: 20px; cursor: pointer; font-size: 12px; line-height: 1;">&times;</button>
+          </div>
+        </div>
+        <div id="viewport-tooltip-body" style="margin-top: 6px;">
+          <div>&bull; <strong>Hover Behaviour Categories (▸)</strong> to open 2nd-level DMS options.</div>
+          <div>&bull; <strong>Click any Timeline Layer</strong> to inspect &amp; tune Blend In/Out curves.</div>
+          <div>&bull; <strong>Click a Body Part</strong> in 3D to target directional Force Events.</div>
+          <div style="margin-top: 7px; padding-top: 6px; border-top: 1px solid #1e293b; font-size: 10px; color: #94a3b8; line-height: 1.5;">
+            <div style="font-weight: 600; color: #38bdf8; margin-bottom: 3px;">⌨️ Keyboard Shortcuts:</div>
+            <div><kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">Space</kbd> Play / Pause &bull; <kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">Ctrl+Space</kbd> Re-Simulate</div>
+            <div><kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">W</kbd> <kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">E</kbd> <kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">R</kbd> Move / Rotate / Scale</div>
+            <div><kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">F</kbd> Focus Camera &bull; <kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">T</kbd> T-Pose</div>
+            <div><kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">←</kbd> <kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">→</kbd> Step Frame &bull; <kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">Home</kbd> Frame 0</div>
+            <div><kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">Del</kbd> Delete &bull; <kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">G</kbd> Gizmos &bull; <kbd style="background:#1e293b;padding:1px 4px;border-radius:2px;color:#f8fafc;font-size:9.5px;">Esc</kbd> Deselect</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Viewport Floating Skeleton Hierarchy HUD (Minimizable) -->
+      <div class="viewport-bone-tree-overlay" id="viewport-bone-tree">
+        <div class="bone-tree-header" id="bone-tree-header" title="Click to Minimize / Expand Skeleton Hierarchy">
+          <div class="bone-tree-title">
+            <span>🦴</span>
+            <span>Skeleton Tree</span>
+            <span class="outliner-count-badge" id="hud-bone-count">19</span>
+          </div>
+          <div class="bone-tree-header-actions">
+            <button class="bone-tree-btn-mini" id="btn-hud-bone-focus" title="Focus camera on character" style="font-size: 10px;">🎯</button>
+            <button class="bone-tree-btn-mini" id="btn-hud-bone-min" title="Minimize / Expand Skeleton Tree">&minus;</button>
+          </div>
+        </div>
+        <div class="bone-tree-body" id="bone-tree-body">
+          <div class="outliner-toolbar" style="margin-bottom: 2px;">
+            <input type="text" class="outliner-search-input" id="hud-bone-search" placeholder="🔍 Search bones (e.g. Spine, Hand)..." style="padding: 4px 7px; font-size: 10px;">
+            <div class="outliner-quick-actions">
+              <button class="outliner-btn-mini" id="hud-bone-expand-all" style="font-size: 9.5px; padding: 2px 5px;">
+                <span>⊞</span><span>Expand</span>
+              </button>
+              <button class="outliner-btn-mini" id="hud-bone-collapse-all" style="font-size: 9.5px; padding: 2px 5px;">
+                <span>⊟</span><span>Collapse</span>
+              </button>
+              <button class="outliner-btn-mini" id="hud-bone-reset-tpose" style="font-size: 9.5px; padding: 2px 5px;" title="Reset Character to T-Pose">
+                <span>⏮</span><span>T-Pose</span>
+              </button>
+            </div>
+          </div>
+          <div class="bone-tree-scroll" id="hud-bone-tree-container">
+            <!-- Dynamically populated bone hierarchy tree -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Dynamic Property Editor, Active Pose & AI Stunt Director -->
+    <div class="panel panel-right" style="width: 325px;">
+      <!-- Draggable Left Edge Resizer for Right Panel -->
+      <div id="resizer-right-panel" class="ui-resizer-vertical ui-resizer-right-edge" title="Drag left/right to resize panel">
+        <span class="resizer-arrow-pill">↔</span>
+      </div>
+      <div class="panel-header" style="padding: 0; display: flex; border-bottom: 1px solid #1e293b; background: #070b14;">
+        <button id="tab-btn-inspector" class="right-panel-tab active" style="flex: 1; padding: 10px 8px; border: none; background: transparent; color: #38bdf8; font-size: 11px; font-weight: 700; cursor: pointer; border-bottom: 2px solid #38bdf8; display: flex; align-items: center; justify-content: center; gap: 5px;">
+          <span>⚡</span><span id="right-panel-title">INSPECTOR</span>
+        </button>
+        <button id="tab-btn-ai" class="right-panel-tab" style="flex: 1; padding: 10px 8px; border: none; background: transparent; color: #94a3b8; font-size: 11px; font-weight: 700; cursor: pointer; border-bottom: 2px solid transparent; display: flex; align-items: center; justify-content: center; gap: 5px;">
+          <span>✨</span><span>AI STUNT DIRECTOR</span>
+        </button>
+      </div>
+      <div class="panel-body" id="tab-content-inspector">
+
+        <!-- ACTIVE POSE & BONE ROTATION INSPECTOR (Shown in Pose Mode) -->
+        <div class="control-group" id="pose-inspector-group" style="display: none; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.35); padding: 10px; border-radius: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="color: #d8b4fe; margin: 0; font-weight: 700;">🦴 ACTIVE POSE EDITOR</label>
+            <span id="pose-mode-status-badge" style="font-size: 9px; padding: 2px 6px; border-radius: 3px; background: #a855f7; color: #fff; font-weight: 700;">POSE MODE ON</span>
+          </div>
+          <div class="inspector-box" id="pose-inspector-content" style="margin-top: 8px;">
+            <!-- Dynamically populated bone sliders & key controls -->
+          </div>
+        </div>
+
+        <!-- DYNAMIC LAYER PROPERTY INSPECTOR -->
+        <div class="control-group" id="layer-inspector-group" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="color: #38bdf8;">⚡ Selected Track Inspector</label>
+            <button id="btn-close-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Layer">&times;</button>
+          </div>
+          <div class="inspector-box" id="layer-inspector-content"></div>
+        </div>
+
+        <!-- DYNAMIC PROP PROPERTY INSPECTOR (TOGGLE SWITCH & TRANSFORM) -->
+        <div class="control-group" id="prop-inspector-group" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="color: #f59e0b;" id="prop-inspector-title">📦 Selected Prop Inspector</label>
+            <button id="btn-close-prop-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Prop">&times;</button>
+          </div>
+          <div class="inspector-box" id="prop-inspector-content"></div>
+        </div>
+
+        <!-- DYNAMIC BONE PROPERTY INSPECTOR -->
+        <div class="control-group" id="bone-inspector-group" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="color: #f43f5e;" id="bone-inspector-title">🦴 Selected Bone</label>
+            <button id="btn-close-bone-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Bone">&times;</button>
+          </div>
+          <div class="inspector-box" id="bone-inspector-content"></div>
+        </div>
+
+        <!-- BIOMECHANICAL DYNAMIC BALANCE & COUNTER-WEIGHING (ZMP) -->
+        <div class="control-group" id="zmp-balance-group" style="border: 1px solid rgba(52, 211, 153, 0.4); background: rgba(6, 78, 59, 0.12); border-radius: 8px; padding: 10px; transition: all 0.3s ease;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="color: #34d399; font-weight: 700; font-size: 11.5px; display: flex; align-items: center; gap: 6px;">
+              <span>⚖️</span>
+              <span>Dynamic Balance &amp; Counter-Weighing</span>
+            </label>
+            <span id="zmp-live-badge" style="font-size: 9px; padding: 2px 7px; border-radius: 4px; background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.45); font-weight: 700; letter-spacing: 0.5px;">ZMP ACTIVE</span>
+          </div>
+
+          <div class="inspector-box" style="gap: 8px; background: rgba(15, 23, 42, 0.75); border-color: rgba(52, 211, 153, 0.25);">
+            <!-- Active Toggle & Counter-Weighing -->
+            <div class="inspector-row">
+              <label style="font-size: 11px; color: #f8fafc; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="chk-auto-balance" checked style="accent-color: #34d399; width: 15px; height: 15px;">
+                <span style="font-weight: 700; color: #34d399;">Active ZMP Inverted Pendulum Balance</span>
+              </label>
+            </div>
+            <div class="inspector-row">
+              <label style="font-size: 10.5px; color: #cbd5e1; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="chk-counter-weighing" checked style="accent-color: #34d399; width: 14px; height: 14px;">
+                <span>Dynamic Arm &amp; Torso Counter-Weighing</span>
+              </label>
+            </div>
+
+            <!-- Recovery Strength -->
+            <div class="inspector-row">
+              <label><span>Balance Recovery Strength</span><span id="zmp-strength-val" style="color: #38bdf8; font-weight: 700;">100%</span></label>
+              <input type="range" id="zmp-recovery-strength" min="30" max="250" step="5" value="100" style="width: 100%; accent-color: #38bdf8;">
+            </div>
+
+            <!-- Fall Threshold Angle -->
+            <div class="inspector-row">
+              <label><span>Loss of Balance Tilt Limit</span><span id="zmp-tilt-val" style="color: #fbbf24; font-weight: 700;">45&deg;</span></label>
+              <input type="range" id="zmp-tilt-threshold" min="20" max="70" step="5" value="45" style="width: 100%; accent-color: #fbbf24;">
+            </div>
+
+            <!-- Live Status Readout -->
+            <div style="background: rgba(7, 11, 20, 0.75); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 5px; padding: 8px 10px; font-size: 10.5px; color: #94a3b8; display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Equilibrium State:</span>
+                <strong id="zmp-status-text" style="color: #34d399; font-size: 10.5px;">✓ Stable Equilibrium</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Capture Point (ZMP Offset):</span>
+                <span id="zmp-displacement-text" style="color: #38bdf8; font-family: monospace; font-size: 11px;">0.00 m</span>
+              </div>
+            </div>
+
+            <!-- Interactive Push / Shove Test Triggers -->
+            <div style="margin-top: 6px;">
+              <div style="font-size: 9.5px; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Interactive Shove Perturbation Test:</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <button class="btn" id="btn-test-shove-front" style="padding: 6px 4px; font-size: 10.5px; justify-content: center; border-color: rgba(56, 189, 248, 0.5); color: #38bdf8; background: rgba(56, 189, 248, 0.12); font-weight: 600;" title="Simulate 45N impulse from front: character takes recovery step & counter-balances">
+                  👉 Push Front (45N)
+                </button>
+                <button class="btn" id="btn-test-shove-back" style="padding: 6px 4px; font-size: 10.5px; justify-content: center; border-color: rgba(245, 158, 11, 0.5); color: #fbbf24; background: rgba(245, 158, 11, 0.12); font-weight: 600;" title="Simulate 55N impulse from back: character steps forward & swings arms">
+                  👈 Push Back (55N)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHARACTER 3D VIEWPORT AXIS POSITIONING -->
+        <div class="control-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label>Character Transform (X/Y/Z)</label>
+            <button class="btn" id="btn-center-char" style="padding: 2px 7px; font-size: 10px;">Reset (0,0,0)</button>
+          </div>
+          <div class="inspector-box">
+            <button class="btn" id="btn-toggle-move-gizmo" style="width: 100%; justify-content: center; border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.1);">
+              <span>✥</span>
+              <span>3D Move Axis Gizmo: ON</span>
+            </button>
+            <div class="inspector-row">
+              <label><span>X Axis (Left / Right)</span><span id="char-pos-x-val" style="color: #f87171;">0.00 m</span></label>
+              <input type="range" id="char-pos-x" min="-6" max="6" step="0.05" value="0" style="width: 100%; accent-color: #ef4444;">
+            </div>
+            <div class="inspector-row">
+              <label><span>Y Axis (Elevation / Drop)</span><span id="char-pos-y-val" style="color: #4ade80;">0.00 m</span></label>
+              <input type="range" id="char-pos-y" min="0" max="5" step="0.05" value="0" style="width: 100%; accent-color: #22c55e;">
+            </div>
+            <div class="inspector-row">
+              <label><span>Z Axis (Forward / Back)</span><span id="char-pos-z-val" style="color: #60a5fa;">0.00 m</span></label>
+              <input type="range" id="char-pos-z" min="-6" max="6" step="0.05" value="0" style="width: 100%; accent-color: #3b82f6;">
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label>Character 3D Model &amp; Rig</label>
+            <span id="rig-status-badge" style="font-size: 9px; color: #34d399; background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35); padding: 1px 6px; border-radius: 4px; font-weight: 600;">15/15 Bones</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+              <button class="btn" id="btn-model-mixamo" style="justify-content: center; font-size: 10.5px; padding: 5px 4px;">
+                <span>🏃</span>
+                <span>Mixamo</span>
+              </button>
+              <button class="btn" id="btn-model-sam" style="justify-content: center; font-size: 10.5px; padding: 5px 4px;">
+                <span>🧬</span>
+                <span>SAM Human</span>
+              </button>
+              <button class="btn" id="btn-model-mannequin" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.1); justify-content: center; font-size: 10.5px; padding: 5px 4px;">
+                <span>🤖</span>
+                <span>Mannequin</span>
+              </button>
+            </div>
+            <button class="btn" id="btn-import-custom-rig" onclick="document.getElementById('input-mixamo-file').click()" style="justify-content: center; border-color: rgba(56, 189, 248, 0.45); color: #7dd3fc; background: rgba(56, 189, 248, 0.08); font-size: 11px;">
+              <span>📂</span>
+              <span>Import Rigged Character (.fbx / .glb)</span>
+            </button>
+            <button class="btn" id="btn-import-custom-anim-right" onclick="document.getElementById('input-anim-file').click()" style="justify-content: center; border-color: rgba(168, 85, 247, 0.45); color: #d8b4fe; background: rgba(168, 85, 247, 0.08); font-size: 11px;">
+              <span>🎬</span>
+              <span>Import &amp; Retarget Animation (.fbx / .bvh)</span>
+            </button>
+
+            <!-- Collapsible Character Rig Calibration & Retargeting Controls -->
+            <div class="inspector-box" id="rig-calibration-box" style="margin-top: 2px; padding: 8px 9px; gap: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 4px;">
+                <span style="font-size: 10px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">⚙️ Rig Retarget Calibration</span>
+                <button class="btn" id="btn-reset-rig-cal" style="padding: 1px 6px; font-size: 9px;" title="Reset Rig Calibration Offsets">Reset</button>
+              </div>
+              <div id="rig-diag-summary" style="font-size: 9.5px; color: #94a3b8; line-height: 1.35;">
+                Active Rig: <strong style="color: #e2e8f0;">X Bot</strong> &bull; <span style="color: #38bdf8;">T-Pose Calibrated</span>
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label style="font-size: 10px; color: #cbd5e1; display: flex; align-items: center; gap: 6px; cursor: pointer; text-transform: none;">
+                  <input type="checkbox" id="cal-auto-tpose" checked>
+                  <span>Auto A-Pose &rarr; T-Pose Limb Alignment</span>
+                </label>
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label style="font-size: 10px; color: #34d399; display: flex; align-items: center; gap: 6px; cursor: pointer; text-transform: none;">
+                  <input type="checkbox" id="cal-auto-ground-clamp" checked>
+                  <span>Anti-Ground-Penetration Foot Clamp</span>
+                </label>
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label><span>Arm Clearance (Spread)</span><span id="cal-arm-spread-val" style="color: #38bdf8;">0&deg;</span></label>
+                <input type="range" id="cal-arm-spread" min="-30" max="45" step="1" value="0" style="width: 100%; accent-color: #38bdf8;">
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label><span>Thigh Clearance (Stance)</span><span id="cal-thigh-spread-val" style="color: #a78bfa;">0&deg;</span></label>
+                <input type="range" id="cal-thigh-spread" min="0" max="20" step="1" value="0" style="width: 100%; accent-color: #a78bfa;">
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label><span>Foot Sole Margin</span><span id="cal-foot-sole-val" style="color: #fbbf24;">0.04 m</span></label>
+                <input type="range" id="cal-foot-sole-offset" min="0.00" max="0.20" step="0.005" value="0.04" style="width: 100%; accent-color: #fbbf24;">
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label><span>Body Girth (Physics)</span><span id="cal-body-girth-val" style="color: #f43f5e;">1.00x</span></label>
+                <input type="range" id="cal-body-girth" min="0.60" max="1.80" step="0.05" value="1.0" style="width: 100%; accent-color: #f43f5e;">
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label><span>Scale Multiplier</span><span id="cal-scale-mult-val" style="color: #34d399;">1.00x</span></label>
+                <input type="range" id="cal-scale-mult" min="0.25" max="2.5" step="0.05" value="1.0" style="width: 100%; accent-color: #34d399;">
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label><span>Ground Offset Y</span><span id="cal-ground-y-val" style="color: #fbbf24;">0.00 m</span></label>
+                <input type="range" id="cal-ground-y" min="-0.6" max="0.6" step="0.01" value="0" style="width: 100%; accent-color: #fbbf24;">
+              </div>
+              <div class="inspector-row" style="padding: 2px 4px;">
+                <label><span>Facing Yaw Offset</span><span id="cal-yaw-offset-val" style="color: #c084fc;">0&deg;</span></label>
+                <input type="range" id="cal-yaw-offset" min="-180" max="180" step="5" value="0" style="width: 100%; accent-color: #c084fc;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Session Reset</label>
+          <button class="btn" id="btn-reset-tpose">
+            ⏮ Revert to Pristine T-Pose
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Tab 2: Conversational AI Stunt Director & Text-to-Animation Body -->
+      <div class="panel-body" id="tab-content-ai" style="display: none; height: calc(100% - 42px); flex-direction: column; gap: 10px; overflow: hidden;">
+
+        <!-- Mode Toggle: Full Stunt Scene vs Text-to-Animation & @-Tag Compiler -->
+        <div class="ai-mode-switch-row">
+          <button id="btn-ai-mode-stunt" class="ai-mode-btn active" title="Full Scene Stunt Coordinator (Actors, Props, Forces & Reflexes)">
+            <span>🎬</span><span>Full Stunt Scene</span>
+          </button>
+          <button id="btn-ai-mode-motion" class="ai-mode-btn" title="Open-Source Text-to-Animation AI + @Tagging Compiler">
+            <span>🏃</span><span>Text-to-Animation (@Tag)</span>
+          </button>
+        </div>
+
+        <!-- Intelligence Backend Status & Settings -->
+        <div class="ai-status-row">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span id="ai-model-status-indicator" style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+            <span id="ai-model-status-text" style="color: #cbd5e1; font-weight: 600;">Tier 1: Offline Semantic NLP</span>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button id="btn-insert-at-tag" title="Insert Native @ Tag (@bhv, @anim, @pose, @force)" style="background: rgba(56, 189, 248, 0.14); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 4px; padding: 2px 6px; font-size: 9.5px; font-weight: 700; cursor: pointer;">
+              + @Tag
+            </button>
+            <button id="btn-open-api-settings" style="background: #1e293b; border: 1px solid #334155; color: #38bdf8; border-radius: 4px; padding: 2px 7px; font-size: 9.5px; cursor: pointer;">
+              ⚙️ API Key
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Stunt Prompts (Shown in Stunt Mode) -->
+        <div id="ai-chips-stunt-group" style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">
+            💡 Quick Stunt Prompts
+          </div>
+          <div class="ai-suggestions-container">
+            <span class="ai-chip" data-prompt="Both actors stand naturally with active balance">🧍 Natural Stance</span>
+            <span class="ai-chip" data-prompt="Actor 2 tackles Actor 1 hard from behind">🏈 Tackle from Behind</span>
+            <span class="ai-chip" data-prompt="Actor 2 shoves Actor 1 in the chest with violent force">💥 Chest Shove</span>
+            <span class="ai-chip" data-prompt="Walk, trip over hurdle crate & catch fall">🪜 Crate Trip</span>
+            <span class="ai-chip" data-prompt="Heavy wind blast pushing character into water pool">🌊 Wind to Pool</span>
+            <span class="ai-chip" data-prompt="Twister vortex blast spinning character into air flail">🌪️ Twister Vortex</span>
+            <span class="ai-chip" data-prompt="Launch bowling ball at character upper spine">⚽ Ball Projectile</span>
+          </div>
+        </div>
+
+        <!-- Quick Text-to-Animation & @-Tag Prompts (Shown in Text-to-Animation Mode) -->
+        <div id="ai-chips-motion-group" style="display: none; flex-direction: column; gap: 6px;">
+          <div style="font-size: 10px; color: #f472b6; font-weight: 700; text-transform: uppercase; display: flex; justify-content: space-between;">
+            <span>✨ Text-to-Motion + @Tag Recipes</span>
+            <span style="font-size: 9px; color: #94a3b8; text-transform: none;">Type <code style="color:#38bdf8;">@</code> for native menu</span>
+          </div>
+          <div class="ai-suggestions-container">
+            <span class="ai-chip" style="border-color: rgba(236,72,153,0.4);" data-prompt="@anim:FastWalk for 60f then spin kick in the air then @bhv:CatchFall">🥋 Walk → AI Spin Kick → @CatchFall</span>
+            <span class="ai-chip" style="border-color: rgba(236,72,153,0.4);" data-prompt="explosive backflip leap in the air then @bhv:LandCrouch">🤸 AI Backflip → @LandCrouch</span>
+            <span class="ai-chip" style="border-color: rgba(236,72,153,0.4);" data-prompt="drunken stumble forward for 90f while @bhv:ArmsWindmill then @bhv:CatchFall">🥴 AI Drunk Stumble + @Windmill</span>
+            <span class="ai-chip" style="border-color: rgba(236,72,153,0.4);" data-prompt="rapid boxing jab and uppercut combo then @pose:StandingSideOnBoxingMartial">🥊 AI Boxing Combo → @BoxingPose</span>
+            <span class="ai-chip" style="border-color: rgba(236,72,153,0.4);" data-prompt="sprint forward fast for 70f then @prop:Crate then @bhv:JumpDive then @bhv:CatchFall">🏃 AI Sprint → @Crate → @JumpDive</span>
+          </div>
+        </div>
+
+        <!-- Conversational Chat Stream -->
+        <div id="ai-chat-thread" class="ai-messages-thread">
+          <div class="ai-msg ai-msg-assistant">
+            🎬 <strong>AI Stunt Director &amp; Text-to-Motion Compiler Ready</strong><br>
+            • Use <strong>Full Stunt Scene</strong> for instant multi-actor physics setups.<br>
+            • Switch to <strong>Text-to-Animation (@Tag)</strong> or type <code style="color:#38bdf8;">@</code> anytime to mix AI motion generation with native <code style="color:#38bdf8;">@bhv:</code>, <code style="color:#10b981;">@anim:</code>, <code style="color:#a855f7;">@pose:</code>, and <code style="color:#f43f5e;">@force:</code> tags!
+          </div>
+        </div>
+
+        <!-- Chat Prompt Input Row with Floating @-Tag Autocomplete -->
+        <div style="position: relative;">
+          <div id="ai-tag-autocomplete" class="ai-tag-autocomplete"></div>
+          <div class="ai-input-row">
+            <input type="text" id="ai-prompt-input" class="ai-input-field" autocomplete="off" placeholder="Describe stunt or type @ for native tags (@bhv:, @anim:, @pose:)..." />
+            <button id="btn-ai-submit" class="btn-ai-send">▶ Execute</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+       BOTTOM TIMELINE SEQUENCER
+       ========================================================================== -->
+  <footer>
+    <!-- Draggable Top Edge Resizer for Timeline -->
+    <div id="resizer-timeline" class="ui-resizer-horizontal" title="Drag up/down to resize timeline">
+      <span class="resizer-arrow-pill">↕</span>
+    </div>
+
+    <div class="timeline-header-bar">
+      <button class="btn btn-simulate" id="btn-play">▶ Simulate &amp; Play</button>
+      <div class="nle-tool-group" title="Frame Stepping Transport">
+        <button class="nle-tool-btn" id="btn-step-start" title="Jump to Frame 0 (Home)">⏮</button>
+        <button class="nle-tool-btn" id="btn-step-prev" title="Previous Frame (-1f / Left Arrow)">◀</button>
+        <button class="nle-tool-btn" id="btn-step-next" title="Next Frame (+1f / Right Arrow)">▶</button>
+        <button class="nle-tool-btn" id="btn-step-end" title="Jump to End Frame (End)">⏭</button>
+      </div>
+      <div class="frame-badge">Frame: <span id="tel-frame">0</span> / <span id="tel-total-frames">240</span></div>
+
+      <!-- DYNAMIC SCENE DURATION CONTROLLER (DCC STYLE) -->
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: #94a3b8; margin-left: 2px;" title="Set Scene Total Duration (Frames)">
+        <label for="input-scene-duration" style="font-weight: 600;">Length:</label>
+        <input type="number" id="input-scene-duration" value="240" min="30" max="5000" step="30" style="width: 56px; background: #0f172a; border: 1px solid #334155; color: #38bdf8; border-radius: 4px; padding: 2px 4px; font-size: 11px; font-weight: 600; text-align: center;">
+        <span style="font-size: 10px; color: #64748b;" id="scene-duration-sec">(4.0s)</span>
+      </div>
+
+      <!-- Undo / Redo Quick Controls -->
+      <div class="nle-tool-group">
+        <button class="nle-tool-btn" id="btn-timeline-undo" title="Undo Last Action (Ctrl+Z)" style="opacity: 0.4;">
+          <span>↩️</span><span>Undo</span>
+        </button>
+        <button class="nle-tool-btn" id="btn-timeline-redo" title="Redo Next Action (Ctrl+Y)" style="opacity: 0.4;">
+          <span>↪️</span><span>Redo</span>
+        </button>
+      </div>
+
+      <!-- NLE Clip Editing Tools (Split, Trim Start, Trim End / Shorten, Duplicate, Delete, Fit) -->
+      <div class="nle-tool-group">
+        <button class="nle-tool-btn nle-btn-split" id="btn-timeline-split" title="Split / Cut Clip at Playhead into Two Clips (Hotkey S)">
+          <span>✂️</span><span>Split</span>
+        </button>
+        <button class="nle-tool-btn" id="btn-timeline-trim-in" title="Trim Clip Start to Playhead (Hotkey [)">
+          <span>⇤</span><span>Trim In</span>
+        </button>
+        <button class="nle-tool-btn" id="btn-timeline-trim-out" title="Shorten / Cut Clip End at Playhead (Hotkey ])">
+          <span>Trim Out</span><span>⇥</span>
+        </button>
+        <button class="nle-tool-btn" id="btn-timeline-duplicate" title="Duplicate Selected Clip After End (Hotkey D)">
+          <span>⧉</span><span>Dup</span>
+        </button>
+        <button class="nle-tool-btn nle-btn-danger" id="btn-timeline-delete" title="Delete Selected Clip (Hotkey Delete)">
+          <span>🗑️</span>
+        </button>
+        <button class="nle-tool-btn" id="btn-timeline-fit" title="Fit / Crop Total Timeline Frames to Active Clips">
+          <span>↔</span><span>Fit</span>
+        </button>
+      </div>
+
+      <!-- Pose Keyframe Recording Controls -->
+      <button class="btn" id="btn-key-pose" title="Record Keyframe at current frame (Hotkey I)" style="border-color: #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.15); padding: 4px 8px; font-size: 10.5px;">
+        ◆ Key Pose (I)
+      </button>
+      <button class="btn" id="btn-auto-key" title="Auto-Keyframe on bone manipulation" style="border-color: #64748b; color: #94a3b8; padding: 4px 8px; font-size: 10.5px;">
+        ⏺️ Auto-Key: OFF
+      </button>
+
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: #94a3b8;">
+        <label>Speed:</label>
+        <select id="playback-speed-select" style="background: #0f172a; border: 1px solid #334155; color: #38bdf8; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+          <option value="1.0">1.0x</option>
+          <option value="0.5">0.5x</option>
+          <option value="0.25">0.25x</option>
+          <option value="2.0">2.0x</option>
+        </select>
+      </div>
+
+      <div class="timeline-scrubber-row">
+        <input type="range" class="timeline-slider" id="timeline-slider" min="0" max="240" value="0">
+      </div>
+    </div>
+
+    <!-- Synchronized Frame Ruler & Multi-Track Layer View -->
+    <div class="timeline-tracks-wrapper" id="timeline-tracks-wrapper">
+      <div class="timeline-ruler-row">
+        <div class="timeline-ruler-header" style="display: flex; align-items: center; justify-content: space-between; padding-right: 6px;">
+          <span>Sequencer</span>
+          <div class="timeline-actor-filters">
+            <button class="timeline-filter-btn active" id="filter-actor-all" title="View all tracks">ALL</button>
+            <button class="timeline-filter-btn" id="filter-actor-1" title="View Hero (A1) tracks" style="color: #38bdf8;">HERO</button>
+            <button class="timeline-filter-btn" id="filter-actor-2" title="View Enemy (A2) tracks" style="color: #fb923c;">ENEMY</button>
+            <button class="timeline-filter-btn" id="btn-open-flow-graph" title="Open Behavior Flow Graph & Reactive Trigger Map" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.1); margin-left: 4px;">🔀 FLOW</button>
+          </div>
+        </div>
+        <div class="timeline-ruler-track" id="timeline-ruler-track" title="Click or drag to scrub timeline playhead">
+          <span class="ruler-tick-label" style="left: 0%; transform: translateX(2px);">0f</span>
+          <span class="ruler-tick-label" style="left: 12.5%;">30f</span>
+          <span class="ruler-tick-label" style="left: 25%;">60f</span>
+          <span class="ruler-tick-label" style="left: 37.5%;">90f</span>
+          <span class="ruler-tick-label" style="left: 50%;">120f</span>
+          <span class="ruler-tick-label" style="left: 62.5%;">150f</span>
+          <span class="ruler-tick-label" style="left: 75%;">180f</span>
+          <span class="ruler-tick-label" style="left: 87.5%;">210f</span>
+          <span class="ruler-tick-label" style="left: 100%; transform: translateX(-100%);">240f</span>
+        </div>
+      </div>
+
+      <div class="timeline-playhead-overlay">
+        <div class="playhead-line" id="timeline-playhead-line">
+          <div class="playhead-cap"></div>
+        </div>
+      </div>
+
+      <div class="timeline-layers-viewport" id="layers-container"></div>
+    </div>
+  </footer>
+
+  <!-- Gemini API Key Settings Modal -->
+  <div id="modal-api-key" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">✨</span>
+          <strong style="color: #f8fafc; font-size: 13px;">AI Stunt Coordinator Intelligence Settings</strong>
+        </div>
+        <button id="btn-close-api-modal" style="background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer;">&times;</button>
+      </div>
+      <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
+        OpenDMS includes a <strong>100% Offline Semantic Physics Matcher</strong> that executes prompt stunts without an internet connection.<br><br>
+        To unlock <strong>Tier 2 Deep Cinematic Reasoning</strong> (complex multi-character storytelling, creative improvisation, and dialogue), enter your Google Gemini API key below:
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 10px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Google Gemini API Key</label>
+        <input type="password" id="input-gemini-key" placeholder="AIzaSy..." style="width: 100%; background: #070b14; border: 1px solid #334155; color: #f8fafc; padding: 7px 10px; border-radius: 4px; font-size: 11px; outline: none; font-family: monospace;">
+        <small style="font-size: 9.5px; color: #64748b;">Keys are securely stored only in your local browser's localStorage.</small>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+        <button id="btn-clear-key" class="btn" style="border-color: #64748b; color: #94a3b8;">Use Offline Tier 1</button>
+        <button id="btn-save-key" class="btn btn-simulate">Save &amp; Activate Tier 2</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Motion Capture Library & Importer Modal -->
+  <div id="modal-mocap-library" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="width: 680px; max-width: 95vw; max-height: 85vh;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">🏃</span>
+          <div>
+            <strong style="color: #f8fafc; font-size: 13px;">DMS Motion Capture &amp; Animation Library</strong>
+            <div style="font-size: 10px; color: #94a3b8;">Native FBX &amp; BVH Retargeting with Active Motorized Simulation</div>
+          </div>
+        </div>
+        <button id="btn-close-mocap-modal" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
+      </div>
+
+      <!-- Search & Category Filters -->
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="mocap-search-input" placeholder="🔍 Search mocap clips (e.g. walk, kick, jump, punch)..." style="flex: 1; min-width: 180px; background: #070b14; border: 1px solid #334155; color: #f8fafc; padding: 6px 10px; border-radius: 4px; font-size: 11px;">
+        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+          <button class="ai-chip mocap-cat-btn active" data-cat="all" style="border-color: #38bdf8; color: #38bdf8;">All</button>
+          <button class="ai-chip mocap-cat-btn" data-cat="AI Generated" style="border-color: rgba(236, 72, 153, 0.5); color: #f472b6;">✨ AI Generated</button>
+          <button class="ai-chip mocap-cat-btn" data-cat="Locomotion">Locomotion</button>
+          <button class="ai-chip mocap-cat-btn" data-cat="Combat &amp; Stunts">Combat</button>
+          <button class="ai-chip mocap-cat-btn" data-cat="Sports">Sports</button>
+          <button id="btn-mocap-open-ai-gen" class="btn" style="padding: 3px 8px; font-size: 10px; border-color: #ec4899; color: #f472b6; background: rgba(236, 72, 153, 0.14);">✨ Generate AI Motion...</button>
+        </div>
+      </div>
+
+      <!-- Drag & Drop / Custom File Upload Zone -->
+      <div id="mocap-dropzone" style="border: 2px dashed #475569; border-radius: 6px; padding: 12px; text-align: center; background: rgba(15, 23, 42, 0.4); cursor: pointer; transition: all 0.15s ease;">
+        <span style="font-size: 18px; display: block; margin-bottom: 4px;">📂</span>
+        <strong style="color: #cbd5e1; font-size: 11.5px;">Click to Upload or Drag &amp; Drop Custom Animation</strong>
+        <div style="color: #64748b; font-size: 10px; margin-top: 2px;">Supports Mixamo FBX (7.x), BVH Mocap, and GLTF/GLB with full retargeting</div>
+      </div>
+
+      <!-- Presets Grid Container -->
+      <div id="mocap-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+        <!-- Injected dynamically from ENDORPHIN_MOCAP_LIBRARY -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Animation Target Choice Modal (Actor 1 vs Spawn Actor 2) -->
+  <div id="modal-anim-target-choice" class="modal-overlay" style="display: none; z-index: 10050;">
+    <div class="modal-card" style="width: 520px; max-width: 95vw; background: #0f172a; border: 1px solid #38bdf8; box-shadow: 0 20px 40px rgba(0,0,0,0.8);">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(56, 189, 248, 0.15); display: flex; align-items: center; justify-content: center; font-size: 16px;">🎬</div>
+          <div>
+            <strong style="color: #f8fafc; font-size: 13.5px;">Choose Animation Target Character</strong>
+            <div id="anim-target-clip-title" style="font-size: 11px; color: #38bdf8; font-family: monospace;">Clip: Soccer - Power Kick.bvh</div>
+          </div>
+        </div>
+        <button id="btn-close-anim-target-modal" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+
+      <div style="font-size: 11px; color: #94a3b8; line-height: 1.5; margin: 8px 0 12px 0;">
+        Select how you want to apply this animation to your 3D stunt scene:
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div id="btn-target-actor-1" class="anim-target-card" style="border: 2px solid #38bdf8; background: rgba(56, 189, 248, 0.08); border-radius: 8px; padding: 14px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 8px; transition: all 0.15s ease;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 22px;">🔵</span>
+            <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #0284c7; color: #fff; font-weight: 700;">DEFAULT</span>
+          </div>
+          <div style="font-size: 12.5px; font-weight: 700; color: #f8fafc;">Apply to Current Character</div>
+          <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.4;">
+            Retargets and replaces the active animation track on <strong>Actor 1 (Hero)</strong>.
+          </div>
+          <button style="margin-top: auto; padding: 6px 10px; background: #0284c7; border: none; color: #fff; border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer; pointer-events: none;">Apply to Actor 1</button>
+        </div>
+
+        <div id="btn-target-actor-2" class="anim-target-card" style="border: 2px solid #f97316; background: rgba(249, 115, 22, 0.08); border-radius: 8px; padding: 14px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 8px; transition: all 0.15s ease;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 22px;">🟠</span>
+            <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #ea580c; color: #fff; font-weight: 700;">STUNT PAIR</span>
+          </div>
+          <div style="font-size: 12.5px; font-weight: 700; color: #f8fafc;">Spawn as New Character</div>
+          <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.4;">
+            Spawns <strong>Actor 2 (Opponent)</strong> with this animation, keeping Actor 1 intact for interactions or combat.
+          </div>
+          <button style="margin-top: auto; padding: 6px 10px; background: #ea580c; border: none; color: #fff; border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer; pointer-events: none;">Spawn as Actor 2</button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button id="btn-cancel-anim-target" style="padding: 6px 14px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; font-size: 11px; cursor: pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Behavior Flow Graph & Reactive State Machine Modal -->
+  <div id="modal-behavior-flow-graph" class="modal-overlay" style="display: none; z-index: 10040;">
+    <div class="modal-card" style="width: 780px; max-width: 95vw; max-height: 85vh; background: #0f172a; border: 1px solid rgba(251, 191, 36, 0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.85);">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(251, 191, 36, 0.15); display: flex; align-items: center; justify-content: center; font-size: 16px;">🔀</div>
+          <div>
+            <strong style="color: #f8fafc; font-size: 13.5px;">Behavior Flow Graph &amp; Reactive State Machine</strong>
+            <div style="font-size: 10.5px; color: #fbbf24;">Event-Driven Reactive Triggers &amp; Dynamic ZMP Balance</div>
+          </div>
+        </div>
+        <button id="btn-close-flow-graph" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+
+      <!-- Live Reactive Flow Diagram -->
+      <div id="flow-graph-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid #1e293b; border-radius: 8px; padding: 14px; min-height: 220px; max-height: 320px; overflow-y: auto;">
+        <!-- Injected dynamically via renderBehaviorFlowGraph() -->
+      </div>
+
+      <!-- Quick Stunt Scenarios -->
+      <div style="margin-top: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">⚡ Quick Reactive Stunt Choreography (One-Click AI Stunt Builder):</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <button class="btn" id="btn-stunt-tackle" style="font-size: 10.5px; padding: 8px; justify-content: center; border-color: rgba(244, 63, 94, 0.4); color: #fda4af; background: rgba(244, 63, 94, 0.08);">
+            🏈 Tackle &amp; Wrap Takedown
+          </button>
+          <button class="btn" id="btn-stunt-shove" style="font-size: 10.5px; padding: 8px; justify-content: center; border-color: rgba(249, 115, 22, 0.4); color: #fed7aa; background: rgba(249, 115, 22, 0.08);">
+            🥊 Chest Shove &amp; Stepping Recovery
+          </button>
+          <button class="btn" id="btn-stunt-trip" style="font-size: 10.5px; padding: 8px; justify-content: center; border-color: rgba(56, 189, 248, 0.4); color: #bae6fd; background: rgba(56, 189, 248, 0.08);">
+            🦶 Ankle Trip &amp; Dive Roll
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

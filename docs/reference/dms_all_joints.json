@@ -1,0 +1,354 @@
+[
+  {
+    "name": "LowerSpineJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "MiddleSpineJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "UpperSpineJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LowerNeckJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "UpperNeckJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftArmVirtualMuscle",
+    "fixedCoords": "CoordsNone",
+    "hard": {
+      "btwistSize": 2.75,
+      "bswing1Size": 2.25,
+      "bswing2Size": 2.990000009536743,
+      "bradius": 2.6500000953674316,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    },
+    "soft": {
+      "btwistSize": 2.5,
+      "bswing1Size": 2.049999952316284,
+      "bswing2Size": 2.75,
+      "bradius": 2.5999999046325684,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "primaryOffset": [
+      0,
+      0,
+      0
+    ],
+    "driveOffset": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "RightArmVirtualMuscle",
+    "fixedCoords": "CoordsNone",
+    "hard": {
+      "btwistSize": 2.75,
+      "bswing1Size": 2.25,
+      "bswing2Size": 2.990000009536743,
+      "bradius": 2.6500000953674316,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    },
+    "soft": {
+      "btwistSize": 2.5,
+      "bswing1Size": 2.049999952316284,
+      "bswing2Size": 2.75,
+      "bradius": 2.5999999046325684,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "primaryOffset": [
+      0,
+      0,
+      0
+    ],
+    "driveOffset": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "RightClavicleJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "RightShoulderJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "RightElbowJoint",
+    "fixedCoords": "CoordsLinearAndSwing",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "RightForearmTwistJoint",
+    "fixedCoords": "CoordsLinearAndSwing",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "RightWristJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftClavicleJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftShoulderJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftElbowJoint",
+    "fixedCoords": "CoordsLinearAndSwing",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftForearmTwistJoint",
+    "fixedCoords": "CoordsLinearAndSwing",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftWristJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftLegVirtualMuscle",
+    "fixedCoords": "CoordsNone",
+    "hard": {
+      "btwistSize": 2.75,
+      "bswing1Size": 2.25,
+      "bswing2Size": 2.990000009536743,
+      "bradius": 2.6500000953674316,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    },
+    "soft": {
+      "btwistSize": 2.5,
+      "bswing1Size": 2.049999952316284,
+      "bswing2Size": 2.75,
+      "bradius": 2.5999999046325684,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "primaryOffset": [
+      0,
+      0,
+      0
+    ],
+    "driveOffset": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "RightLegVirtualMuscle",
+    "fixedCoords": "CoordsNone",
+    "hard": {
+      "btwistSize": 2.75,
+      "bswing1Size": 2.25,
+      "bswing2Size": 2.990000009536743,
+      "bradius": 2.6500000953674316,
+      "btwistStiffness": 0,
+      "bswingStiffness": 0,
+      "blinearStiffness": 0,
+      "btwistDamping": 0,
+      "bswingDamping": 0,
+      "blinearDamping": 0
+    },
+    "soft": {
+      "btwistSize": 2.5,
+      "bswing1Size": 2.049999952316284,
+      "bswing2Size": 2.75,
+      "bradius": 2.5999999046325684,
+      "btwistStiffness": 10,
+      "bswingStiffness": 10,
+      "blinearStiffness": 10,
+      "btwistDamping": 10,
+      "bswingDamping": 10,
+      "blinearDamping": 10
+    },
+    "primaryOffset": [
+      0,
+      0,
+      0
+    ],
+    "driveOffset": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "RightHipJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "RightKneeJoint",
+    "fixedCoords": "CoordsLinearAndSwing2",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "RightAnkleJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "RightMidFootJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "RightToesJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftHipJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftKneeJoint",
+    "fixedCoords": "CoordsLinearAndSwing2",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftAnkleJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftMidFootJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  },
+  {
+    "name": "LeftToesJoint",
+    "fixedCoords": "CoordsLinear",
+    "hard": null,
+    "soft": null,
+    "primaryOffset": null,
+    "driveOffset": null
+  }
+]
