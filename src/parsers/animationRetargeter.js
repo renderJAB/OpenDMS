@@ -99,6 +99,54 @@ function normalizeName(str) {
   return str.toLowerCase().replace(/^(mixamorig|bip01_|character_|mhr_|smpl_|j_bip_)/, '').replace(/[:_\-\s]/g, '');
 }
 
+// Dynamically resolves bone mapping based on whether the imported skeleton/rig uses
+// BVH convention (Collar = Clavicle/Shoulder joint, Shoulder = UpperArm) or
+// Game/Mixamo/FBX convention (Shoulder = Clavicle/Shoulder joint, Arm = UpperArm).
+export function resolveBoneMapForSkeleton(bonesOrTracks) {
+  const names = Array.isArray(bonesOrTracks)
+    ? bonesOrTracks.map(b => (b && b.name ? b.name : String(b || '')))
+    : Object.keys(bonesOrTracks || {});
+  const normNames = new Set(names.map(n => normalizeName(n.split('.')[0])));
+
+  const hasLeftCollar = normNames.has('leftcollar') || normNames.has('leftclavicle') || normNames.has('lcollar') || normNames.has('lclavicle');
+  const hasRightCollar = normNames.has('rightcollar') || normNames.has('rightclavicle') || normNames.has('rcollar') || normNames.has('rclavicle');
+
+  const hasLeftArm = normNames.has('leftarm') || normNames.has('leftupperarm') || normNames.has('luparm') || normNames.has('larm');
+  const hasRightArm = normNames.has('rightarm') || normNames.has('rightupperarm') || normNames.has('ruparm') || normNames.has('rarm');
+
+  const map = { ...BONE_MAP };
+
+  if (hasLeftCollar) {
+    // BVH format: collar is clavicle (LeftShoulder), shoulder is upper arm (LeftUpperArm)
+    map.leftcollar = 'LeftShoulder';
+    map.leftclavicle = 'LeftShoulder';
+    map.lcollar = 'LeftShoulder';
+    map.leftshoulder = 'LeftUpperArm';
+  } else if (hasLeftArm) {
+    // Mixamo / FBX format: shoulder is clavicle (LeftShoulder), arm is upper arm (LeftUpperArm)
+    map.leftshoulder = 'LeftShoulder';
+    map.lshoulder = 'LeftShoulder';
+    map.leftarm = 'LeftUpperArm';
+    map.leftupperarm = 'LeftUpperArm';
+    map.luparm = 'LeftUpperArm';
+  }
+
+  if (hasRightCollar) {
+    map.rightcollar = 'RightShoulder';
+    map.rightclavicle = 'RightShoulder';
+    map.rcollar = 'RightShoulder';
+    map.rightshoulder = 'RightUpperArm';
+  } else if (hasRightArm) {
+    map.rightshoulder = 'RightShoulder';
+    map.rshoulder = 'RightShoulder';
+    map.rightarm = 'RightUpperArm';
+    map.rightupperarm = 'RightUpperArm';
+    map.ruparm = 'RightUpperArm';
+  }
+
+  return map;
+}
+
 // Built-in Endorphin Motion Capture Library Catalogue
 export const ENDORPHIN_MOCAP_LIBRARY = [
   // Locomotion
@@ -254,10 +302,11 @@ export class AnimationRetargeter {
       const mixer = new THREE.AnimationMixer(rootBone);
       mixer.clipAction(clip).play();
 
+      const resolvedBoneMap = resolveBoneMapForSkeleton(skeleton.bones);
       const segToBone = {};
       for (const b of skeleton.bones) {
         const norm = normalizeName(b.name);
-        const seg = BONE_MAP[norm];
+        const seg = resolvedBoneMap[norm];
         if (seg && !segToBone[seg]) {
           segToBone[seg] = b;
         }
@@ -327,9 +376,10 @@ export class AnimationRetargeter {
           const wq = new THREE.Quaternion();
           if (bone) {
             bone.getWorldQuaternion(wq);
-            if (seg.startsWith('Left') && (seg.includes('Shoulder') || seg.includes('Arm') || seg.includes('Forearm') || seg.includes('Hand'))) {
+            // Arm rest-alignment applies strictly to UpperArm, Forearm, and Hand - NEVER to Clavicle (LeftShoulder/RightShoulder)
+            if (seg.startsWith('Left') && (seg.includes('Arm') || seg.includes('Forearm') || seg.includes('Hand'))) {
               wq.multiply(qAlignL);
-            } else if (seg.startsWith('Right') && (seg.includes('Shoulder') || seg.includes('Arm') || seg.includes('Forearm') || seg.includes('Hand'))) {
+            } else if (seg.startsWith('Right') && (seg.includes('Arm') || seg.includes('Forearm') || seg.includes('Hand'))) {
               wq.multiply(qAlignR);
             }
           } else if (def.parent && worldRot[def.parent]) {
@@ -397,6 +447,7 @@ export class AnimationRetargeter {
     // --- FALLBACK: DIRECT TRACK-BY-TRACK PARSING (WITH ARMS-DOWN CALIBRATION) ---
 
     // Detect track mappings to OpenDMS bones
+    const resolvedTrackMap = resolveBoneMapForSkeleton(clip.tracks);
     const trackBindings = [];
     let rootPosTrack = null;
 
@@ -405,7 +456,7 @@ export class AnimationRetargeter {
       const rawBoneName = parts[0] || '';
       const property = parts[1] || '';
       const norm = normalizeName(rawBoneName);
-      const targetSegment = BONE_MAP[norm];
+      const targetSegment = resolvedTrackMap[norm];
 
       if (targetSegment === 'Pelvis' && property === 'position') {
         rootPosTrack = track;
