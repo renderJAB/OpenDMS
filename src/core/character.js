@@ -385,7 +385,7 @@ export class BiomechanicalCharacter {
 
     // Biomechanical Dynamic Balance & Inverted Pendulum Recovery Controller (Endorphin / Boston Dynamics ZMP)
     this.dynamicBalance = new DynamicBalanceController(this);
-    this.balanceControlEnabled = true;
+    this.balanceControlEnabled = false;
     this.counterWeighingEnabled = true;
     this.balanceRecoveryStrength = 1.0;
     this.lossOfBalanceTiltLimit = 55;

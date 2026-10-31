@@ -3226,6 +3226,33 @@ function renderLayerInspector() {
         <label><span>Arm Spread Offset</span><span id="insp-anim-spread-val" style="color: #fbbf24;">${Math.round(layer.armSpreadDeg ?? 0)}&deg;</span></label>
         <input type="range" id="insp-anim-arm-spread" min="-45" max="45" step="1" value="${layer.armSpreadDeg ?? 0}" style="width: 100%; accent-color: #fbbf24;">
       </div>
+      <div style="margin-top: 10px; padding: 8px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 6px;">
+        <div style="font-size: 10.5px; font-weight: 700; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+          <span>⚡ Simulation Takeover (End Cut)</span>
+          <span style="font-size: 9px; color: #94a3b8; font-weight: normal;">When Clip Ends / Cut</span>
+        </div>
+        <div class="inspector-row">
+          <label><span>Takeover Mode</span></label>
+          <select class="inspector-select" id="insp-anim-takeover-mode">
+            <option value="active_hold" ${(layer.simTakeoverMode || 'active_hold') === 'active_hold' ? 'selected' : ''}>🏃 Active Momentum &amp; Pose Hold (Endorphin)</option>
+            <option value="blend_out" ${layer.simTakeoverMode === 'blend_out' ? 'selected' : ''}>🔄 Smooth Simulation Crossfade</option>
+            <option value="ragdoll" ${layer.simTakeoverMode === 'ragdoll' ? 'selected' : ''}>💀 Momentum Ragdoll (Passive Release)</option>
+            <option value="freeze" ${layer.simTakeoverMode === 'freeze' ? 'selected' : ''}>🛑 Stationary Physics (Cancel Forward Momentum)</option>
+          </select>
+        </div>
+        <div class="inspector-row">
+          <label><span>Momentum Carry Scale</span><span id="insp-anim-velcarry-val" style="color: #38bdf8;">${Math.round((layer.velocityCarry ?? 1.0) * 100)}%</span></label>
+          <input type="range" id="insp-anim-velcarry" min="0" max="200" step="5" value="${Math.round((layer.velocityCarry ?? 1.0) * 100)}" style="width: 100%; accent-color: #38bdf8;">
+        </div>
+        <div class="inspector-row">
+          <label><span>Post-Takeover Muscle Stiffness</span><span id="insp-anim-takeoverstiff-val" style="color: #34d399;">${Math.round((layer.takeoverStiffness ?? 1.0) * 100)}%</span></label>
+          <input type="range" id="insp-anim-takeoverstiff" min="0" max="200" step="5" value="${Math.round((layer.takeoverStiffness ?? 1.0) * 100)}" style="width: 100%; accent-color: #34d399;">
+        </div>
+        <div class="inspector-row">
+          <label><span>Blend-Out Transition Window</span><span id="insp-anim-blendout-val" style="color: #c084fc;">${layer.blendOut ?? 0} frames</span></label>
+          <input type="range" id="insp-anim-blendout" min="0" max="30" step="1" value="${layer.blendOut ?? 0}" style="width: 100%; accent-color: #c084fc;">
+        </div>
+      </div>
     `;
   } else if (layer.type === 'ACTIVE_POSE') {
     const poseOptions = Object.entries(ENDORPHIN_ACTIVE_POSES).map(([key, p]) =>
@@ -3780,6 +3807,54 @@ function renderLayerInspector() {
       timeline.invalidateSimulation();
       timeline.seek(timeline.currentFrame);
       if (mixamoBridge && mixamoBridge.isVisible) mixamoBridge.update();
+      updateSimulationStatusUI();
+    });
+  }
+
+  // Simulation Takeover Controls
+  const selTakeoverMode = document.getElementById('insp-anim-takeover-mode');
+  if (selTakeoverMode) {
+    selTakeoverMode.addEventListener('change', (e) => {
+      layer.simTakeoverMode = e.target.value;
+      timeline.invalidateSimulation();
+      updateSimulationStatusUI();
+      showNotification(`Simulation Takeover: ${e.target.options[e.target.selectedIndex].text}`, 'info');
+    });
+  }
+
+  const inpVelCarry = document.getElementById('insp-anim-velcarry');
+  if (inpVelCarry) {
+    inpVelCarry.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 0;
+      layer.velocityCarry = val / 100.0;
+      const el = document.getElementById('insp-anim-velcarry-val');
+      if (el) el.textContent = `${Math.round(val)}%`;
+      timeline.invalidateSimulation();
+      updateSimulationStatusUI();
+    });
+  }
+
+  const inpTakeoverStiff = document.getElementById('insp-anim-takeoverstiff');
+  if (inpTakeoverStiff) {
+    inpTakeoverStiff.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 0;
+      layer.takeoverStiffness = val / 100.0;
+      const el = document.getElementById('insp-anim-takeoverstiff-val');
+      if (el) el.textContent = `${Math.round(val)}%`;
+      timeline.invalidateSimulation();
+      updateSimulationStatusUI();
+    });
+  }
+
+  const inpAnimBlendOut = document.getElementById('insp-anim-blendout');
+  if (inpAnimBlendOut) {
+    inpAnimBlendOut.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10) || 0;
+      layer.blendOut = val;
+      const el = document.getElementById('insp-anim-blendout-val');
+      if (el) el.textContent = `${val} frames`;
+      timeline.invalidateSimulation();
+      renderTimelineLayers();
       updateSimulationStatusUI();
     });
   }
@@ -9059,7 +9134,7 @@ function setupUI() {
     }
 
     if (chkAutoBalance) {
-      chkAutoBalance.checked = character?.balanceControlEnabled ?? true;
+      chkAutoBalance.checked = character?.balanceControlEnabled ?? false;
       chkAutoBalance.addEventListener('change', (e) => {
         const val = e.target.checked;
         if (character) character.balanceControlEnabled = val;

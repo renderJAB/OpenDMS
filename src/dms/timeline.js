@@ -1485,14 +1485,27 @@ export class TimelineEngine {
       if (char.isKinematic) {
         char.setDynamicMode(true);
         const invDt = this.fps;
+
+        // Simulation Takeover Settings from the cut/past animation layer
+        const animLayers = this.layers.filter(l => l.enabled && l.type === 'ANIMATION' && (l.actorId || 'actor-1') === actorId);
+        const cutAnim = animLayers.filter(l => l.endFrame <= f).sort((a, b) => b.endFrame - a.endFrame)[0];
+        const takeoverMode = cutAnim?.simTakeoverMode || 'active_hold';
+        const velMultiplier = cutAnim?.velocityCarry ?? 1.0;
+
         for (const [name, b] of Object.entries(char.bodies)) {
           if (actor.hadKinematicAnimLastFrame && actor.prevPositions[name]) {
+            if (takeoverMode === 'freeze') {
+              // Stationary in-place physics: cancel linear and angular velocity at cut point
+              b.rigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+              b.rigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
+              continue;
+            }
+
             const curPos = b.rigidBody.translation();
             const p = actor.prevPositions[name];
-            const linVel = new THREE.Vector3(curPos.x - p.x, curPos.y - p.y, curPos.z - p.z).multiplyScalar(invDt);
-            // When transitioning directly into an external force hit, damp the residual kinematic velocity
-            // so the external force effector cleanly governs the physical reaction rather than stacking an explosive momentum burst
-            const maxSpeed = forceHitActive ? 1.2 : (name === 'Pelvis' || name === 'UpperSpine' ? 2.5 : 4.0);
+            const linVel = new THREE.Vector3(curPos.x - p.x, curPos.y - p.y, curPos.z - p.z).multiplyScalar(invDt * velMultiplier);
+            // Endorphin True Inertial Momentum Carry (unclamped up to 16.0 m/s for full athletic jumps/sprints)
+            const maxSpeed = forceHitActive ? 1.5 : 16.0;
             if (forceHitActive) linVel.multiplyScalar(0.4);
             linVel.clampLength(0, maxSpeed);
             b.rigidBody.setLinvel({ x: linVel.x, y: linVel.y, z: linVel.z }, true);
@@ -1507,8 +1520,8 @@ export class TimelineEngine {
               const angle = 2 * Math.acos(Math.min(1, Math.max(-1, qDiff.w)));
               const s = Math.sqrt(Math.max(0, 1 - qDiff.w * qDiff.w));
               if (s > 0.001 && angle > 0.001) {
-                const angVel = new THREE.Vector3(qDiff.x / s, qDiff.y / s, qDiff.z / s).multiplyScalar(angle * invDt);
-                const maxAngSpeed = forceHitActive ? 3.0 : 6.0;
+                const angVel = new THREE.Vector3(qDiff.x / s, qDiff.y / s, qDiff.z / s).multiplyScalar(angle * invDt * velMultiplier);
+                const maxAngSpeed = forceHitActive ? 3.0 : 12.0;
                 if (forceHitActive) angVel.multiplyScalar(0.5);
                 angVel.clampLength(0, maxAngSpeed);
                 b.rigidBody.setAngvel({ x: angVel.x, y: angVel.y, z: angVel.z }, true);
@@ -1648,7 +1661,25 @@ export class TimelineEngine {
         char.isPureRagdoll = true;
       } else if (!hasActiveTracks) {
         // Base Timeline State (No explicit behavior or animation tracks)
-        if (char.balanceControlEnabled) {
+        const animLayers = this.layers.filter(l => l.enabled && l.type === 'ANIMATION' && (l.actorId || 'actor-1') === actorId);
+        const pastAnim = animLayers.filter(l => l.endFrame <= f).sort((a, b) => b.endFrame - a.endFrame)[0];
+        const isPastAnimActiveHold = pastAnim && (pastAnim.simTakeoverMode || 'active_hold') === 'active_hold';
+
+        if (isPastAnimActiveHold && baseRotations) {
+          // Simulation Takeover: Carry momentum with active motorized pose hold from the cut frame
+          char.isPureRagdoll = false;
+          const stiffMult = pastAnim.takeoverStiffness ?? 1.0;
+          char.muscleStiffness = 220.0 * stiffMult;
+          char.muscleDamping = 28.0;
+          if (char.joints) {
+            for (const j of char.joints) {
+              const rot = baseRotations[j.childName] || NATURAL_STANCE_ROTATIONS[j.childName] || [0, 0, 0];
+              j.targetAngle.x = rot[0];
+              j.targetAngle.y = rot[1];
+              j.targetAngle.z = rot[2];
+            }
+          }
+        } else if (char.balanceControlEnabled) {
           // Autonomous Active Dynamic Balance (Boston Dynamics Standing Equilibrium)
           char.isPureRagdoll = false;
           char.muscleStiffness = 300.0;
