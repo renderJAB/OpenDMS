@@ -9627,41 +9627,130 @@ function setupUI() {
 
   // Setup Panel Resizers (Timeline height, Left panel width, Right panel width)
   function setupPanelResizers() {
-    // 1. Timeline Top Edge Resizer (Vertical Height)
+    // 1. Timeline Top Edge Resizer (Vertical Height) & Expand/Restore Toggle
     const timelineResizer = document.getElementById('resizer-timeline');
     const footerEl = document.querySelector('footer');
-    if (timelineResizer && footerEl) {
+    const btnToggleExpand = document.getElementById('btn-timeline-toggle-expand');
+    const expandIcon = document.getElementById('timeline-expand-icon');
+    const expandLabel = document.getElementById('timeline-expand-label');
+
+    if (footerEl) {
       let isResizingTimeline = false;
       let startY = 0;
-      let startHeight = 230;
+      let startHeight = 225;
+      const DEFAULT_HEIGHT = 225;
+      const MIN_HEIGHT = 90;
 
-      timelineResizer.addEventListener('pointerdown', (e) => {
-        isResizingTimeline = true;
-        startY = e.clientY;
-        startHeight = footerEl.getBoundingClientRect().height;
-        timelineResizer.classList.add('is-dragging');
-        try { timelineResizer.setPointerCapture(e.pointerId); } catch (_) {}
-        document.body.style.cursor = 'ns-resize';
-        e.preventDefault();
-      });
+      // Restore saved timeline height if present
+      const savedHeight = parseInt(localStorage.getItem('opendms_timeline_height'), 10);
+      if (!isNaN(savedHeight) && savedHeight >= MIN_HEIGHT && savedHeight <= window.innerHeight * 0.82) {
+        footerEl.style.height = `${savedHeight}px`;
+      }
 
-      window.addEventListener('pointermove', (e) => {
-        if (!isResizingTimeline) return;
-        const deltaY = startY - e.clientY;
-        const maxTimelineHeight = Math.max(260, Math.floor(window.innerHeight * 0.68));
-        const newHeight = THREE.MathUtils.clamp(startHeight + deltaY, 130, maxTimelineHeight);
-        footerEl.style.height = `${newHeight}px`;
-        onWindowResize();
-      });
+      function updateExpandBtnUI(height) {
+        const isExpanded = height >= Math.min(380, window.innerHeight * 0.45);
+        if (expandIcon) expandIcon.textContent = isExpanded ? '⤡' : '⤢';
+        if (expandLabel) expandLabel.textContent = isExpanded ? 'Restore' : 'Expand';
+        if (btnToggleExpand) {
+          btnToggleExpand.classList.toggle('active', isExpanded);
+          btnToggleExpand.style.borderColor = isExpanded ? '#38bdf8' : '#334155';
+          btnToggleExpand.style.color = isExpanded ? '#38bdf8' : '#94a3b8';
+          btnToggleExpand.title = isExpanded
+            ? 'Minimize / Restore Timeline (Shift+T)'
+            : 'Expand Timeline Sequencer (Shift+T)';
+        }
+      }
 
-      window.addEventListener('pointerup', () => {
-        if (!isResizingTimeline) return;
-        isResizingTimeline = false;
-        timelineResizer.classList.remove('is-dragging');
-        document.body.style.cursor = '';
-        onWindowResize();
-        buildRulerTicks();
-      });
+      // Sync initial button state
+      updateExpandBtnUI(footerEl.getBoundingClientRect().height);
+
+      function setTimelineHeight(height, smooth = false) {
+        const maxTimelineHeight = Math.max(260, Math.floor(window.innerHeight * 0.8));
+        const clampedH = THREE.MathUtils.clamp(height, MIN_HEIGHT, maxTimelineHeight);
+
+        if (smooth) {
+          footerEl.classList.add('footer-smooth');
+          footerEl.style.height = `${clampedH}px`;
+          setTimeout(() => {
+            footerEl.classList.remove('footer-smooth');
+            onWindowResize();
+            buildRulerTicks();
+          }, 240);
+        } else {
+          footerEl.style.height = `${clampedH}px`;
+          onWindowResize();
+        }
+
+        updateExpandBtnUI(clampedH);
+        localStorage.setItem('opendms_timeline_height', clampedH.toString());
+      }
+
+      // Public toggle function callable via button, hotkey (Shift+T), or double click
+      window.toggleTimelineExpand = function() {
+        const curHeight = footerEl.getBoundingClientRect().height;
+        const expandedTarget = Math.max(380, Math.floor(window.innerHeight * 0.58));
+        if (curHeight >= expandedTarget - 40) {
+          setTimelineHeight(DEFAULT_HEIGHT, true);
+        } else {
+          setTimelineHeight(expandedTarget, true);
+        }
+      };
+
+      if (btnToggleExpand) {
+        btnToggleExpand.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.toggleTimelineExpand();
+        });
+      }
+
+      if (timelineResizer) {
+        timelineResizer.addEventListener('dblclick', (e) => {
+          e.preventDefault();
+          window.toggleTimelineExpand();
+        });
+
+        const onPointerDown = (e) => {
+          isResizingTimeline = true;
+          startY = e.clientY;
+          startHeight = footerEl.getBoundingClientRect().height;
+          footerEl.classList.remove('footer-smooth');
+          timelineResizer.classList.add('is-dragging');
+          try { timelineResizer.setPointerCapture(e.pointerId); } catch (_) {}
+          document.body.style.cursor = 'ns-resize';
+          e.preventDefault();
+        };
+
+        const onPointerMove = (e) => {
+          if (!isResizingTimeline) return;
+          const deltaY = startY - e.clientY;
+          const maxTimelineHeight = Math.max(260, Math.floor(window.innerHeight * 0.8));
+          const newHeight = THREE.MathUtils.clamp(startHeight + deltaY, MIN_HEIGHT, maxTimelineHeight);
+          footerEl.style.height = `${newHeight}px`;
+          updateExpandBtnUI(newHeight);
+          onWindowResize();
+        };
+
+        const onPointerUp = (e) => {
+          if (!isResizingTimeline) return;
+          isResizingTimeline = false;
+          timelineResizer.classList.remove('is-dragging');
+          if (e && e.pointerId) {
+            try { timelineResizer.releasePointerCapture(e.pointerId); } catch (_) {}
+          }
+          document.body.style.cursor = '';
+          const finalHeight = footerEl.getBoundingClientRect().height;
+          localStorage.setItem('opendms_timeline_height', Math.round(finalHeight).toString());
+          onWindowResize();
+          buildRulerTicks();
+        };
+
+        timelineResizer.addEventListener('pointerdown', onPointerDown);
+        timelineResizer.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointermove', onPointerMove);
+        timelineResizer.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointerup', onPointerUp);
+        timelineResizer.addEventListener('pointercancel', onPointerUp);
+      }
     }
 
     // 2. Left Panel Right Edge Resizer (Horizontal Width)
@@ -9911,8 +10000,17 @@ function initKeyboardShortcuts() {
       return;
     }
 
-    // 10. T: Reset Character to T-Pose
-    if (e.code === 'KeyT' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    // 10. Shift+T: Toggle Timeline Sequencer Expansion / Minimization
+    if (e.code === 'KeyT' && e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      if (typeof window.toggleTimelineExpand === 'function') {
+        window.toggleTimelineExpand();
+      }
+      return;
+    }
+
+    // T: Reset Character to T-Pose
+    if (e.code === 'KeyT' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       e.preventDefault();
       character.resetToTPose();
       if (mixamoBridge && mixamoBridge.isVisible) mixamoBridge.update();
