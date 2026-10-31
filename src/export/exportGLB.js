@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { BVH_BONE_ORDER } from './exportBVH.js';
 import { SKELETON_TREE } from '../core/character.js';
+import { resampleSimulationFrames } from './resampleFrames.js';
 
 /**
  * Safely clones a Three.js Object3D hierarchy without throwing "Converting circular structure to JSON"
@@ -77,7 +78,9 @@ export function sanitizeHierarchyForExport(root) {
  * @returns {Promise<ArrayBuffer>} The GLB file buffer
  */
 export async function exportSceneToGLB(character, propsManager, recordedFrames, fps = 60, options = {}) {
-  const validFrames = (recordedFrames || []).filter(f => f && (f.bodies || (f.actors && Object.keys(f.actors).length > 0)));
+  const sourceFps = options.sourceFps || options.simFps || 60;
+  const outputFps = options.outputFps || fps || sourceFps;
+  const validFrames = resampleSimulationFrames(recordedFrames, sourceFps, outputFps);
   if (validFrames.length === 0) {
     throw new Error('No simulation frames to export. Please simulate first.');
   }
@@ -141,7 +144,7 @@ export async function exportSceneToGLB(character, propsManager, recordedFrames, 
   const numFrames = validFrames.length;
   const times = new Float32Array(numFrames);
   for (let i = 0; i < numFrames; i++) {
-    times[i] = i / fps;
+    times[i] = i / outputFps;
   }
 
   const tracks = [];
@@ -233,7 +236,7 @@ export async function exportSceneToGLB(character, propsManager, recordedFrames, 
     }
   }
 
-  const duration = (numFrames - 1) / fps;
+  const duration = (numFrames - 1) / outputFps;
   const clip = new THREE.AnimationClip('OpenDMS_Simulation', duration, tracks);
 
   // 4. Sanitize hierarchy before export
@@ -270,17 +273,21 @@ export async function exportSceneToGLB(character, propsManager, recordedFrames, 
  * @returns {Promise<ArrayBuffer>} The GLB file buffer
  */
 export async function exportArmatureToGLB(recordedFrames, fps = 60, options = {}) {
+  const sourceFps = options.sourceFps || options.simFps || 60;
+  const outputFps = options.outputFps || fps || sourceFps;
   const actorId = options.actorId || 'actor-1';
+
+  const validFrames = resampleSimulationFrames(recordedFrames, sourceFps, outputFps);
+  if (validFrames.length === 0) {
+    throw new Error('No simulation frames to export. Please simulate first.');
+  }
+
   const getFrameBodies = (f) => {
     if (!f) return null;
     if (f.actors && f.actors[actorId] && f.actors[actorId].bodies) return f.actors[actorId].bodies;
     if (f.bodies) return f.bodies;
     return null;
   };
-  const validFrames = (recordedFrames || []).filter(f => getFrameBodies(f));
-  if (validFrames.length === 0) {
-    throw new Error('No simulation frames to export. Please simulate first.');
-  }
 
   // 1. Build the Bone hierarchy matching SKELETON_TREE
   const bones = {};
@@ -303,7 +310,7 @@ export async function exportArmatureToGLB(recordedFrames, fps = 60, options = {}
   const numFrames = validFrames.length;
   const times = new Float32Array(numFrames);
   for (let i = 0; i < numFrames; i++) {
-    times[i] = i / fps;
+    times[i] = i / outputFps;
   }
 
   const tracks = [];
@@ -356,7 +363,7 @@ export async function exportArmatureToGLB(recordedFrames, fps = 60, options = {}
     tracks.push(new THREE.QuaternionKeyframeTrack(`${item.name}.quaternion`, times, rotValues));
   }
 
-  const duration = (numFrames - 1) / fps;
+  const duration = (numFrames - 1) / outputFps;
   const clip = new THREE.AnimationClip('OpenDMS_Armature_Motion', duration, tracks);
 
   // 3. Create Authentic Skinned Armature Mesh for DCC Import (Blender / UE5 / Unity)

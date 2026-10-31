@@ -7,6 +7,7 @@ export class TimelineEngine {
     this.dmsEngine = dmsEngine;
     this.totalFrames = 240;
     this.fps = 60;
+    this.substeps = 2;
     this.currentFrame = 0;
     this.isSimulated = false;
     this.isPlaying = false;
@@ -479,6 +480,15 @@ export class TimelineEngine {
     }
     this.invalidateSimulation();
     return this.totalFrames;
+  }
+
+  setFps(newFps) {
+    const valid = Math.max(12, Math.min(240, Math.round(Number(newFps) || 60)));
+    if (this.fps !== valid) {
+      this.fps = valid;
+      this.invalidateSimulation();
+    }
+    return this.fps;
   }
 
   // --- ACTIVE POSE & KEYFRAME TRACK METHODS (NATURALMOTION ENDORPHIN 2.7.1) ---
@@ -1246,7 +1256,7 @@ export class TimelineEngine {
           }
 
           // Apply mutual action-reaction impulse transfer
-          const dt = 1 / 120;
+          const dt = (1 / this.fps) / (this.substeps || 2);
           const impulse = force.multiplyScalar(dt);
           impulse.clampLength(0, 15.0);
 
@@ -1260,7 +1270,8 @@ export class TimelineEngine {
 
   // --- STEP A SINGLE SIMULATION FRAME (FOR LIVE BAKING & RENDERING) ---
   stepSingleSimulationFrame(f, stepPhysicsFn) {
-    const dt = 1 / 120;
+    const substeps = this.substeps || 2;
+    const dt = (1 / this.fps) / substeps;
     const actorList = Object.values(this.actors);
     const actorsToStep = actorList.length > 0 ? actorList : [{
       id: 'actor-1',
@@ -1271,7 +1282,7 @@ export class TimelineEngine {
       prevQuaternions: this.prevQuaternions
     }];
 
-    for (let s = 0; s < 2; s++) {
+    for (let s = 0; s < substeps; s++) {
       for (const actor of actorsToStep) {
         this.stepActorFrame(actor, f, dt, s);
       }

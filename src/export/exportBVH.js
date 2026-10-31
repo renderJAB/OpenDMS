@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { resampleSimulationFrames } from './resampleFrames.js';
 
 /**
  * Ordered definition of the humanoid skeleton hierarchy for BVH export.
@@ -166,6 +167,12 @@ export function exportToBVH(recordedFrames, fps = 60, options = {}) {
   if (!recordedFrames || recordedFrames.length === 0) return '';
 
   const scale = options.scale ?? 1.0; // 1.0 is standard 1:1 Meter scale for Blender, Unreal Engine, Godot, and Three.js
+  const sourceFps = options.sourceFps || options.simFps || 60;
+  const outputFps = options.outputFps || fps || sourceFps;
+
+  const validFrames = resampleSimulationFrames(recordedFrames, sourceFps, outputFps);
+  if (validFrames.length === 0) return '';
+
   const header = buildBVHHierarchy(scale);
 
   // Filter valid frames (supports both single-actor f.bodies and multi-actor f.actors)
@@ -176,10 +183,8 @@ export function exportToBVH(recordedFrames, fps = 60, options = {}) {
     if (f.bodies) return f.bodies;
     return null;
   };
-  const validFrames = recordedFrames.filter(f => getFrameBodies(f));
-  if (validFrames.length === 0) return '';
 
-  const frameTime = (1.0 / fps).toFixed(6);
+  const frameTime = (1.0 / outputFps).toFixed(6);
   const motionHeader = `MOTION\nFrames: ${validFrames.length}\nFrame Time: ${frameTime}\n`;
 
   const motionLines = [];

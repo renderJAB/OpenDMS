@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { SKELETON_TREE } from '../core/character.js';
+import { resampleSimulationFrames } from './resampleFrames.js';
 
 // Segments and visual dimensions for high-fidelity glTF representation
 const BONE_SPECS = {
@@ -42,8 +43,10 @@ export async function exportToGLTF(simulationCache, options = {}) {
     throw new Error('No simulation frames recorded. Simulate the scene before exporting.');
   }
 
-  const fps = options.fps || 60;
-  const validFrames = simulationCache.filter(f => f && (f.bodies || (f.actors && Object.keys(f.actors).length > 0)));
+  const sourceFps = options.sourceFps || options.simFps || 60;
+  const outputFps = options.outputFps || options.fps || sourceFps;
+
+  const validFrames = resampleSimulationFrames(simulationCache, sourceFps, outputFps);
   if (validFrames.length === 0) {
     throw new Error('Simulation cache contains no valid keyframe data.');
   }
@@ -51,7 +54,7 @@ export async function exportToGLTF(simulationCache, options = {}) {
   const exportScene = new THREE.Scene();
   exportScene.name = 'OpenDMS_Simulation_Scene';
 
-  const times = validFrames.map((f, i) => i / fps);
+  const times = validFrames.map((f, i) => i / outputFps);
   const totalDuration = times[times.length - 1];
   const tracks = [];
 

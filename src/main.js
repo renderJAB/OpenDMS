@@ -16,6 +16,7 @@ import { EndorphinParser } from './parsers/endorphinParser.js';
 import { exportToBVH } from './export/exportBVH.js';
 import { exportSceneToGLB, exportArmatureToGLB, downloadBinaryFile } from './export/exportGLB.js';
 import { exportToGLTF } from './export/exportGLTF.js';
+import { resampleSimulationFrames } from './export/resampleFrames.js';
 import { MixamoCharacterBridge } from './core/mixamo.js';
 import { AIStuntDirector } from './dms/aiStuntDirector.js';
 import { AnimationRetargeter, ENDORPHIN_MOCAP_LIBRARY } from './parsers/animationRetargeter.js';
@@ -5518,7 +5519,7 @@ function setSceneDuration(newTotalFrames) {
 
   if (elTotalFrames) elTotalFrames.textContent = frames;
   if (inpDuration) inpDuration.value = frames;
-  if (secDuration) secDuration.textContent = `(${(frames / 60).toFixed(1)}s)`;
+  if (secDuration) secDuration.textContent = `(${(frames / (timeline.fps || 60)).toFixed(1)}s)`;
   if (slider) slider.max = frames;
 
   timeline.invalidateSimulation();
@@ -8078,71 +8079,261 @@ function setupUI() {
     });
   }
 
-  // Export Buttons
-  const triggerExportGLTFScene = async () => {
-    if (!timeline.isSimulated || timeline.simulationCache.length === 0) {
-      alert('Please click "Simulate & Play" first to render the simulation data before exporting.');
+  // ==========================================
+  // SIMULATION FPS & TIMELINE FRAME RATE CONTROLS
+  // ==========================================
+  const selectSimFps = document.getElementById('select-sim-fps');
+  if (selectSimFps) {
+    selectSimFps.value = String(timeline.fps || 60);
+    selectSimFps.addEventListener('change', (e) => {
+      const newFps = parseInt(e.target.value, 10) || 60;
+      timeline.setFps(newFps);
+      const secDuration = document.getElementById('scene-duration-sec');
+      if (secDuration) {
+        secDuration.textContent = `(${(timeline.totalFrames / timeline.fps).toFixed(1)}s)`;
+      }
+      renderTimelineRuler();
+      renderTimelineLayers();
+      updateSimulationStatusUI();
+      if (typeof updateExportModalSummary === 'function') {
+        updateExportModalSummary();
+      }
+      showNotification(`Simulation Frame Rate set to ${timeline.fps} FPS (Physics dt: ${(1000 / (timeline.fps * (timeline.substeps || 2))).toFixed(2)}ms)`, 'info');
+    });
+  }
+
+  // ==========================================
+  // DCC PIPELINE EXPORT & OUTPUT FPS MODAL CONTROLLER
+  // ==========================================
+  function updateExportModalSummary() {
+    const modal = document.getElementById('modal-export-settings');
+    if (!modal) return;
+
+    const selectedFormatRadio = modal.querySelector('input[name="export-format"]:checked');
+    const format = selectedFormatRadio ? selectedFormatRadio.value : 'bvh';
+
+    const fpsSelect = document.getElementById('export-output-fps');
+    const customFpsInput = document.getElementById('export-custom-fps');
+    const isCustom = fpsSelect && fpsSelect.value === 'custom';
+    if (customFpsInput) {
+      customFpsInput.style.display = isCustom ? 'block' : 'none';
+    }
+
+    let outputFps = timeline.fps || 60;
+    if (fpsSelect) {
+      if (fpsSelect.value === 'sim') {
+        outputFps = timeline.fps || 60;
+      } else if (fpsSelect.value === 'custom') {
+        outputFps = Math.max(1, Math.min(240, parseInt(customFpsInput?.value, 10) || 24));
+      } else {
+        outputFps = parseInt(fpsSelect.value, 10) || 60;
+      }
+    }
+
+    const simFps = timeline.fps || 60;
+    const numRecorded = timeline.simulationCache?.length || 0;
+    const simSec = numRecorded > 0 ? (numRecorded - 1) / simFps : (timeline.totalFrames / simFps);
+    const outFrames = numRecorded > 0 ? Math.round(simSec * outputFps) + 1 : Math.round((timeline.totalFrames / simFps) * outputFps);
+
+    const statusBadge = document.getElementById('export-sim-status-badge');
+    const timingText = document.getElementById('export-timing-text');
+    const btnLabel = document.getElementById('export-btn-label');
+
+    if (timeline.isSimulated && numRecorded > 0) {
+      if (statusBadge) {
+        statusBadge.textContent = `READY (${numRecorded} frames)`;
+        statusBadge.style.background = 'rgba(34, 197, 94, 0.2)';
+        statusBadge.style.color = '#86efac';
+        statusBadge.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+      }
+    } else {
+      if (statusBadge) {
+        statusBadge.textContent = 'NOT SIMULATED';
+        statusBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        statusBadge.style.color = '#fca5a5';
+        statusBadge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      }
+    }
+
+    if (timingText) {
+      const isResampling = (simFps !== outputFps);
+      const resampleBadge = isResampling
+        ? ` <span style="color: #38bdf8; font-weight: 600;">(SLERP Resampling: ${simFps} &rarr; ${outputFps} fps)</span>`
+        : ` <span style="color: #4ade80; font-weight: 600;">(1:1 Native Rate)</span>`;
+      timingText.innerHTML = `Simulation: <strong>${numRecorded} frames @ ${simFps} fps</strong> (${simSec.toFixed(2)}s) &rarr; Output: <strong>${outFrames} frames @ ${outputFps} fps</strong> (${simSec.toFixed(2)}s)${resampleBadge}`;
+    }
+
+    if (btnLabel) {
+      if (format === 'bvh') btnLabel.textContent = `Export BVH Motion (${outputFps} FPS)`;
+      else if (format === 'glb-scene') btnLabel.textContent = `Export Scene GLB (${outputFps} FPS)`;
+      else if (format === 'glb-armature') btnLabel.textContent = `Export Rigged Armature GLB (${outputFps} FPS)`;
+      else if (format === 'json') btnLabel.textContent = `Export Session JSON (${outputFps} FPS)`;
+    }
+
+    const actorRow = document.getElementById('export-actor-row');
+    if (actorRow) {
+      actorRow.style.opacity = (format === 'glb-scene') ? '0.6' : '1.0';
+    }
+  }
+
+  function openExportDialog(preferredFormat = 'bvh') {
+    const modal = document.getElementById('modal-export-settings');
+    if (!modal) return;
+
+    // Set selected format radio
+    const formatRadios = modal.querySelectorAll('input[name="export-format"]');
+    formatRadios.forEach(r => {
+      r.checked = (r.value === preferredFormat);
+    });
+
+    // Set active actor radio based on timeline.activeActorId
+    const actorRadios = modal.querySelectorAll('input[name="export-actor"]');
+    const activeActor = timeline.activeActorId || 'actor-1';
+    actorRadios.forEach(r => {
+      if (preferredFormat === 'glb-scene') {
+        r.checked = (r.value === 'all');
+      } else {
+        r.checked = (r.value === activeActor);
+      }
+    });
+
+    // Update actor-2 visibility
+    const actor2Label = document.getElementById('export-actor-2-label');
+    if (actor2Label) {
+      actor2Label.style.display = actor2Active ? 'flex' : 'none';
+    }
+
+    // Update sim fps option label in output fps dropdown
+    const optSim = modal.querySelector('#export-output-fps option[value="sim"]');
+    if (optSim) {
+      optSim.textContent = `Match Simulation (Current: ${timeline.fps || 60} fps)`;
+    }
+
+    updateExportModalSummary();
+    modal.style.display = 'flex';
+  }
+  window.openExportDialog = openExportDialog;
+
+  function closeExportDialog() {
+    const modal = document.getElementById('modal-export-settings');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function executeExportFromModal() {
+    if (!timeline.isSimulated || !timeline.simulationCache || timeline.simulationCache.length === 0) {
+      alert('Please click "Simulate & Play" first to simulate the timeline before exporting.');
       return;
     }
+
+    const modal = document.getElementById('modal-export-settings');
+    const formatRadio = modal?.querySelector('input[name="export-format"]:checked');
+    const format = formatRadio ? formatRadio.value : 'bvh';
+
+    const actorRadio = modal?.querySelector('input[name="export-actor"]:checked');
+    const actorId = actorRadio ? actorRadio.value : 'actor-1';
+
+    const fpsSelect = document.getElementById('export-output-fps');
+    const customFpsInput = document.getElementById('export-custom-fps');
+    let outputFps = timeline.fps || 60;
+    if (fpsSelect) {
+      if (fpsSelect.value === 'sim') {
+        outputFps = timeline.fps || 60;
+      } else if (fpsSelect.value === 'custom') {
+        outputFps = Math.max(1, Math.min(240, parseInt(customFpsInput?.value, 10) || 24));
+      } else {
+        outputFps = parseInt(fpsSelect.value, 10) || 60;
+      }
+    }
+
+    const scaleSelect = document.getElementById('export-scale-select');
+    const scale = parseFloat(scaleSelect?.value) || 1.0;
+    const sourceFps = timeline.fps || 60;
+    const actorLabel = (actorId === 'actor-2') ? 'enemy_actor2' : 'hero_actor1';
+
     try {
-      const glbBuffer = await exportSceneToGLB(character, propsManager, timeline.simulationCache, timeline.fps || 60, {
-        actor2Character: actor2Active ? actor2Character : null
-      });
-      downloadBinaryFile(glbBuffer, 'opendms_scene_simulation.glb', 'model/gltf-binary');
+      if (format === 'bvh') {
+        const bvhString = exportToBVH(timeline.simulationCache, outputFps, {
+          sourceFps: sourceFps,
+          outputFps: outputFps,
+          scale: scale,
+          actorId: (actorId === 'all') ? 'actor-1' : actorId
+        });
+        downloadFile(bvhString, `opendms_${actorLabel}_motion_${outputFps}fps.bvh`, 'text/plain');
+        showNotification(`Exported BVH for ${actorLabel} at ${outputFps} FPS (Scale: ${scale}x)`, 'success');
+        closeExportDialog();
+      } else if (format === 'glb-scene') {
+        const glbBuffer = await exportSceneToGLB(character, propsManager, timeline.simulationCache, outputFps, {
+          sourceFps: sourceFps,
+          outputFps: outputFps,
+          actor2Character: (actor2Active && (actorId === 'all' || actorId === 'actor-2')) ? actor2Character : null
+        });
+        downloadBinaryFile(glbBuffer, `opendms_scene_simulation_${outputFps}fps.glb`, 'model/gltf-binary');
+        showNotification(`Exported Animated Scene GLB at ${outputFps} FPS`, 'success');
+        closeExportDialog();
+      } else if (format === 'glb-armature') {
+        const targetActor = (actorId === 'all') ? 'actor-1' : actorId;
+        const glbBuffer = await exportArmatureToGLB(timeline.simulationCache, outputFps, {
+          sourceFps: sourceFps,
+          outputFps: outputFps,
+          actorId: targetActor
+        });
+        downloadBinaryFile(glbBuffer, `opendms_${actorLabel}_rigged_armature_${outputFps}fps.glb`, 'model/gltf-binary');
+        showNotification(`Exported Rigged Armature GLB for ${actorLabel} at ${outputFps} FPS`, 'success');
+        closeExportDialog();
+      } else if (format === 'json') {
+        const framesToExport = (outputFps === sourceFps)
+          ? timeline.simulationCache
+          : resampleSimulationFrames(timeline.simulationCache, sourceFps, outputFps);
+        const sessionData = {
+          app: 'OpenDMS Studio',
+          version: '1.0',
+          sourceFps: sourceFps,
+          outputFps: outputFps,
+          frameCount: framesToExport.length,
+          durationSeconds: framesToExport.length > 0 ? (framesToExport.length - 1) / outputFps : 0,
+          exportedAt: new Date().toISOString(),
+          frames: framesToExport
+        };
+        downloadFile(JSON.stringify(sessionData, null, 2), `opendms_simulation_${outputFps}fps.json`, 'application/json');
+        showNotification(`Exported Simulation JSON at ${outputFps} FPS (${framesToExport.length} frames)`, 'success');
+        closeExportDialog();
+      }
     } catch (err) {
-      alert(`Export GLB Scene error: ${err.message}`);
+      console.error('DCC Export Error:', err);
+      alert(`Export Error: ${err.message}`);
     }
-  };
+  }
 
-  document.getElementById('btn-export-glb-scene')?.addEventListener('click', triggerExportGLTFScene);
-  document.getElementById('btn-export-gltf')?.addEventListener('click', triggerExportGLTFScene);
-  document.getElementById('menu-export-gltf')?.addEventListener('click', triggerExportGLTFScene);
+  // Export Modal Triggers & Direct Action Bindings
+  document.getElementById('btn-open-export-dialog')?.addEventListener('click', () => openExportDialog('bvh'));
+  document.getElementById('btn-timeline-open-export')?.addEventListener('click', () => openExportDialog('bvh'));
+  document.getElementById('btn-export-bvh')?.addEventListener('click', () => openExportDialog('bvh'));
+  document.getElementById('btn-export-glb-scene')?.addEventListener('click', () => openExportDialog('glb-scene'));
+  document.getElementById('btn-export-gltf')?.addEventListener('click', () => openExportDialog('glb-scene'));
+  document.getElementById('menu-export-gltf')?.addEventListener('click', () => openExportDialog('glb-scene'));
+  document.getElementById('btn-export-glb-armature')?.addEventListener('click', () => openExportDialog('glb-armature'));
+  document.getElementById('btn-export-json')?.addEventListener('click', () => openExportDialog('json'));
 
-  document.getElementById('btn-export-bvh')?.addEventListener('click', () => {
-    if (!timeline.isSimulated || timeline.simulationCache.length === 0) {
-      alert('Please click "Simulate & Play" first to render the simulation data before exporting.');
-      return;
-    }
-    try {
-      const activeActor = timeline.activeActorId || 'actor-1';
-      const actorLabel = activeActor === 'actor-2' ? 'enemy_actor2' : 'hero_actor1';
-      const bvhString = exportToBVH(timeline.simulationCache, timeline.fps || 60, {
-        scale: 1.0, // 1:1 real-world meter scale for Blender / UE5 / Godot
-        actorId: activeActor
-      });
-      downloadFile(bvhString, `opendms_${actorLabel}_motion.bvh`, 'text/plain');
-      showNotification(`Exported BVH for ${activeActor === 'actor-2' ? 'Actor 2 (Enemy)' : 'Actor 1 (Hero)'} (1:1 Meter scale)`, 'success');
-    } catch (err) {
-      alert(`Export BVH error: ${err.message}`);
-    }
-  });
+  document.getElementById('btn-close-export-modal')?.addEventListener('click', closeExportDialog);
+  document.getElementById('btn-export-cancel')?.addEventListener('click', closeExportDialog);
+  document.getElementById('btn-export-confirm')?.addEventListener('click', executeExportFromModal);
 
-  document.getElementById('btn-export-glb-armature')?.addEventListener('click', async () => {
-    if (!timeline.isSimulated || timeline.simulationCache.length === 0) {
-      alert('Please click "Simulate & Play" first to render the simulation data before exporting.');
-      return;
-    }
-    try {
-      const activeActor = timeline.activeActorId || 'actor-1';
-      const actorLabel = activeActor === 'actor-2' ? 'enemy_actor2' : 'hero_actor1';
-      const glbBuffer = await exportArmatureToGLB(timeline.simulationCache, timeline.fps || 60, {
-        actorId: activeActor
-      });
-      downloadBinaryFile(glbBuffer, `opendms_${actorLabel}_rigged_armature.glb`, 'model/gltf-binary');
-      showNotification(`Exported Rigged Armature GLB for ${activeActor === 'actor-2' ? 'Actor 2 (Enemy)' : 'Actor 1 (Hero)'}`, 'success');
-    } catch (err) {
-      alert(`Export GLB Armature error: ${err.message}`);
-    }
-  });
+  const exportModalOverlay = document.getElementById('modal-export-settings');
+  if (exportModalOverlay) {
+    exportModalOverlay.addEventListener('click', (e) => {
+      if (e.target === exportModalOverlay) closeExportDialog();
+    });
+    exportModalOverlay.querySelectorAll('input[name="export-format"]').forEach(radio => {
+      radio.addEventListener('change', updateExportModalSummary);
+    });
+    exportModalOverlay.querySelectorAll('input[name="export-actor"]').forEach(radio => {
+      radio.addEventListener('change', updateExportModalSummary);
+    });
+  }
 
-  document.getElementById('btn-export-json')?.addEventListener('click', () => {
-    if (!timeline.isSimulated || timeline.simulationCache.length === 0) {
-      alert('Please click "Simulate & Play" first to render the session before exporting.');
-      return;
-    }
-    const jsonText = JSON.stringify(timeline.simulationCache, null, 2);
-    downloadFile(jsonText, 'simulation_session.json', 'application/json');
-  });
+  document.getElementById('export-output-fps')?.addEventListener('change', updateExportModalSummary);
+  document.getElementById('export-custom-fps')?.addEventListener('input', updateExportModalSummary);
+  document.getElementById('export-scale-select')?.addEventListener('change', updateExportModalSummary);
 
   // Ingest Endorphin File (.nmc, .ens, .nma, .nme)
   const fileInput = document.getElementById('file-input');
@@ -10006,6 +10197,15 @@ function initKeyboardShortcuts() {
       }
       return;
     }
+    // DCC Export Pipeline Modal Shortcut: Ctrl+E / Cmd+E
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyE') {
+      e.preventDefault();
+      if (typeof window.openExportDialog === 'function') {
+        window.openExportDialog();
+      }
+      return;
+    }
+
     if (e.code === 'KeyE' && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
       if (isPoseMode) {
