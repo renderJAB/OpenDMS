@@ -546,8 +546,13 @@ export class PhysXCharacter {
         errQuat.w = -errQuat.w;
       }
 
-      const kp = (j.stiffness || 120) * (this.muscleStiffness / 300.0) * 0.45;
-      const kd = (j.damping || 14) * (this.muscleDamping / 35.0) * 0.25;
+      // Smoothly restore motor rigidity after impact shock wave (avoids secondary violent snap)
+      const shockScale = this.impactShockTimer > 0
+        ? 0.22 + 0.78 * Math.pow(1.0 - Math.min(1.0, this.impactShockTimer / 0.26), 2)
+        : 1.0;
+
+      const kp = (j.stiffness || 120) * (this.muscleStiffness / 300.0) * 0.45 * shockScale;
+      const kd = (j.damping || 14) * (this.muscleDamping / 35.0) * 0.25 * shockScale;
       const localErr = new THREE.Vector3(errQuat.x * 2.0, errQuat.y * 2.0, errQuat.z * 2.0).applyQuaternion(pQuat);
 
       const pW = pBody.actor.getAngularVelocity();

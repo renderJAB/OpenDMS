@@ -623,11 +623,13 @@ export class TimelineEngine {
   }
 
   _resetActorTracking() {
+    this.interruptedAnimIds = new Set();
     for (const a of Object.values(this.actors || {})) {
       a.prevPositions = {};
       a.prevQuaternions = {};
       a.simToAnimOffsets = {};
       a.hadKinematicAnimLastFrame = false;
+      a.interruptedAnimIds = new Set();
       if (a.character) {
         a.character.constrainedLimbJoints = null;
         a.character.activeConstrainedBones = null;
@@ -648,6 +650,7 @@ export class TimelineEngine {
     this.prevPositions = {};
     this.prevQuaternions = {};
     if (this.appliedPerturbations) this.appliedPerturbations.clear();
+    this.interruptedAnimIds = new Set();
     this.constraintAnchors = {};
     this.hadKinematicAnimLastFrame = false;
     this._resetActorTracking();
@@ -673,6 +676,15 @@ export class TimelineEngine {
       for (const p of this.layers) {
         if (p.type === 'PERTURBATION' && p.startFrame >= f) {
           this.appliedPerturbations.delete(p.id);
+        }
+      }
+    }
+    for (const a of Object.values(this.actors || {})) {
+      if (a.interruptedAnimIds) {
+        for (const l of this.layers) {
+          if (l.type === 'ANIMATION' && l.startFrame >= f) {
+            a.interruptedAnimIds.delete(l.id);
+          }
         }
       }
     }
@@ -1372,11 +1384,22 @@ export class TimelineEngine {
     const activeConstraints = this.layers.filter(l => l.type === 'CONSTRAINT' && this.isLayerActiveAtFrame(l, f, actor));
     const activePoses = this.layers.filter(l => l.type === 'ACTIVE_POSE' && this.isLayerActiveAtFrame(l, f, actor));
 
-    const rawAnimWeight = activeAnim ? TimelineEngine.computeLayerWeight(activeAnim, f) : 0;
+    if (!actor.interruptedAnimIds) actor.interruptedAnimIds = new Set();
+    const isAnimInterrupted = Boolean(activeAnim && actor.interruptedAnimIds.has(activeAnim.id));
     const forceHitActive = activePerturbations.length > 0;
-    const animWeight = forceHitActive ? 0.0 : rawAnimWeight;
+    if (forceHitActive && activeAnim) {
+      actor.interruptedAnimIds.add(activeAnim.id);
+    }
 
-    const isPoseTrack = Boolean(activeAnim && (activeAnim.animType === 'pose' || (Array.isArray(activeAnim.keyframes) && activeAnim.keyframes.length > 0)));
+    const rawAnimWeight = (activeAnim && !isAnimInterrupted) ? TimelineEngine.computeLayerWeight(activeAnim, f) : 0;
+
+    // When no behavior or constraint is actively blending over the animation and no force has struck,
+    // let kinematic animation run cleanly through its entire duration (f <= activeAnim.endFrame),
+    // rather than letting blendOut prematurely abandon kinematic mode and dump momentum into a ragdoll fling.
+    const isKinematicCleanRun = activeAnim && !isAnimInterrupted && activeBehaviors.length === 0 && !forceHitActive && activeConstraints.length === 0;
+    const animWeight = (forceHitActive || isAnimInterrupted) ? 0.0 : (isKinematicCleanRun ? 1.0 : rawAnimWeight);
+
+    const isPoseTrack = Boolean(activeAnim && !isAnimInterrupted && (activeAnim.animType === 'pose' || (Array.isArray(activeAnim.keyframes) && activeAnim.keyframes.length > 0)));
 
     if (animWeight >= 0.999 && isPoseTrack && activeAnim.isMotorized !== false && activeBehaviors.length === 0 && !forceHitActive) {
       // 1A. ENDORPHIN ACTIVE MOTORIZED POSE (DYNAMIC PHYSICS WITH JOINT TORQUES STRIVING TO POSE)
@@ -1451,7 +1474,11 @@ export class TimelineEngine {
             const curPos = b.rigidBody.translation();
             const p = actor.prevPositions[name];
             const linVel = new THREE.Vector3(curPos.x - p.x, curPos.y - p.y, curPos.z - p.z).multiplyScalar(invDt);
-            linVel.clampLength(0, 8.0);
+            // When transitioning directly into an external force hit, damp the residual kinematic velocity
+            // so the external force effector cleanly governs the physical reaction rather than stacking an explosive momentum burst
+            const maxSpeed = forceHitActive ? 1.2 : (name === 'Pelvis' || name === 'UpperSpine' ? 2.5 : 4.0);
+            if (forceHitActive) linVel.multiplyScalar(0.4);
+            linVel.clampLength(0, maxSpeed);
             b.rigidBody.setLinvel({ x: linVel.x, y: linVel.y, z: linVel.z }, true);
 
             if (actor.prevQuaternions[name]) {
@@ -1465,7 +1492,9 @@ export class TimelineEngine {
               const s = Math.sqrt(Math.max(0, 1 - qDiff.w * qDiff.w));
               if (s > 0.001 && angle > 0.001) {
                 const angVel = new THREE.Vector3(qDiff.x / s, qDiff.y / s, qDiff.z / s).multiplyScalar(angle * invDt);
-                angVel.clampLength(0, 10.0);
+                const maxAngSpeed = forceHitActive ? 3.0 : 6.0;
+                if (forceHitActive) angVel.multiplyScalar(0.5);
+                angVel.clampLength(0, maxAngSpeed);
                 b.rigidBody.setAngvel({ x: angVel.x, y: angVel.y, z: angVel.z }, true);
               } else {
                 b.rigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
@@ -1671,7 +1700,7 @@ export class TimelineEngine {
           const pelvis = char.bodies['Pelvis'];
           const sensors = char.sensors || { tiltAngle: 0 };
           const isFallen = pelvis ? (pelvis.rigidBody.translation().y < 0.55 || sensors.tiltAngle > 38.0) : false;
-          if (pelvis && !isFallen && animSample.walkVel) {
+          if (pelvis && !isFallen && animSample.walkVel && !isAnimInterrupted && !forceHitActive) {
             const yaw = char.spawnYaw || 0;
             const fwdZ = Math.cos(yaw) * animSample.walkVel * 10.0 * animWeight;
             const fwdX = Math.sin(yaw) * animSample.walkVel * 10.0 * animWeight;

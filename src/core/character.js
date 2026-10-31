@@ -1279,8 +1279,10 @@ export class BiomechanicalCharacter {
       return;
     }
 
-    // Momentarily yield motor rigidity during heavy Force Event impact shock wave
-    const shockScale = this.impactShockTimer > 0 ? 0.22 : 1.0;
+    // Smoothly restore motor rigidity after impact shock wave (avoids secondary violent snap)
+    const shockScale = this.impactShockTimer > 0
+      ? 0.22 + 0.78 * Math.pow(1.0 - Math.min(1.0, this.impactShockTimer / 0.26), 2)
+      : 1.0;
 
     // Endorphin Dynamic Impact Yielding:
     // When hands touch the ground during a fall or steep tilt, arm and leg motor torques
@@ -1367,7 +1369,10 @@ export class BiomechanicalCharacter {
 
   // Per-Bone Floor Contact Damping & Micro-Drift Damping (lets limbs and body roll, compress, and rest naturally)
   applyFloorContactStiction(dt) {
-    if (this.impactShockTimer > 0) return;
+    if (this.impactShockTimer > 0.14) return;
+    const stictionShockScale = this.impactShockTimer > 0
+      ? Math.max(0, 1.0 - (this.impactShockTimer / 0.14))
+      : 1.0;
 
     for (const [name, b] of Object.entries(this.bodies)) {
       const trans = b.rigidBody.translation();
@@ -1392,7 +1397,7 @@ export class BiomechanicalCharacter {
 
         // Gentle lateral stiction to settle sliding, preserving vertical collapse and rotational freedom
         if (hSpeed > 0.005 && hSpeed < 0.30 && Math.abs(lv.y) < 0.15) {
-          const stiction = Math.min(0.20, dt * 8.0);
+          const stiction = Math.min(0.20, dt * 8.0) * stictionShockScale;
           b.rigidBody.applyImpulse({
             x: -lv.x * b.mass * stiction,
             y: 0,

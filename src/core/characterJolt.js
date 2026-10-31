@@ -769,6 +769,9 @@ export class JoltCharacter {
   }
 
   update(dt = 1 / 120) {
+    if (this.impactShockTimer > 0) {
+      this.impactShockTimer = Math.max(0, this.impactShockTimer - dt);
+    }
     this.sensors.update(dt);
 
     if (!this.isKinematic) {
