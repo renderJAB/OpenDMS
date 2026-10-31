@@ -1348,6 +1348,114 @@
       font-weight: 600;
     }
 
+    /* Clean Studio Dashboard Overhaul Styles */
+    .panel-tab-btn-compact {
+      flex: 1;
+      padding: 7px 2px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #94a3b8;
+      font-size: 9.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .panel-tab-btn-compact:hover {
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .panel-tab-btn-compact.active {
+      color: #38bdf8;
+      border-bottom-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.09);
+    }
+    .inspector-context-switch {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: rgba(15, 23, 42, 0.7);
+      border-radius: 6px;
+      border: 1px solid #1e293b;
+      margin-bottom: 10px;
+    }
+    .context-pill {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 10.5px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .context-pill:hover {
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .context-pill.active {
+      background: rgba(2, 132, 199, 0.25);
+      border-color: #0284c7;
+      color: #38bdf8;
+      box-shadow: 0 1px 4px rgba(2, 132, 199, 0.2);
+    }
+    .accordion-card {
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.5);
+      overflow: hidden;
+      margin-bottom: 6px;
+      transition: border-color 0.2s ease;
+    }
+    .accordion-card:hover {
+      border-color: #334155;
+    }
+    .accordion-header {
+      padding: 8px 10px;
+      background: rgba(15, 23, 42, 0.7);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      font-size: 11px;
+      font-weight: 700;
+      color: #e2e8f0;
+      transition: background 0.15s ease;
+    }
+    .accordion-header:hover {
+      background: rgba(30, 41, 59, 0.6);
+    }
+    .accordion-chevron {
+      font-size: 9px;
+      color: #64748b;
+      transition: transform 0.2s ease;
+    }
+    .accordion-card.collapsed .accordion-chevron {
+      transform: rotate(-90deg);
+    }
+    .accordion-card.collapsed .accordion-content {
+      display: none !important;
+    }
+    .accordion-content {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
     .tree-chevron {
       width: 14px;
       height: 14px;
@@ -2484,68 +2592,35 @@
     <div class="panel panel-left" style="width: 295px;">
       <div class="panel-header" style="padding: 0; background: #070b14; border-bottom: 1px solid #1e293b;">
         <div class="panel-tab-bar" style="display: flex; width: 100%;">
-          <button class="panel-tab-btn active" id="tab-btn-library">
-            <span>📚</span><span>DMS Library</span>
+          <button class="panel-tab-btn-compact active" id="tab-btn-behaviors" title="DMS Behaviors & Timeline Events">
+            <span style="font-size: 13px;">⚡</span><span>Behaviors</span>
           </button>
-          <button class="panel-tab-btn" id="tab-btn-outliner">
-            <span>🌲</span><span>Scene Outliner</span>
-            <span class="outliner-count-badge" id="outliner-item-count">24</span>
+          <button class="panel-tab-btn-compact" id="tab-btn-staging" title="Multi-Character Staging">
+            <span style="font-size: 13px;">🎭</span><span>Actors</span>
           </button>
+          <button class="panel-tab-btn-compact" id="tab-btn-props" title="Props, Materials & Physics Fields">
+            <span style="font-size: 13px;">📦</span><span>Props</span>
+          </button>
+          <button class="panel-tab-btn-compact" id="tab-btn-outliner" title="Scene Outliner & Hierarchy">
+            <span style="font-size: 13px;">🌲</span><span>Outliner</span>
+            <span class="outliner-count-badge" id="outliner-item-count" style="display: none;">24</span>
+          </button>
+          <!-- Hidden compatibility alias for legacy scripts -->
+          <button id="tab-btn-library" style="display: none;"></button>
         </div>
       </div>
 
-      <!-- TAB 1: SCENE OBJECT TREE -->
-      <div class="panel-body" id="panel-body-outliner" style="display: none;">
-        <div class="outliner-toolbar">
-          <input type="text" class="outliner-search-input" id="outliner-search-input" placeholder="🔍 Search scene objects &amp; props...">
-          <div class="outliner-quick-actions">
-            <button class="outliner-btn-mini" id="outliner-expand-all" title="Expand all tree branches">
-              <span>⊞</span><span>Expand All</span>
-            </button>
-            <button class="outliner-btn-mini" id="outliner-collapse-all" title="Collapse all tree branches">
-              <span>⊟</span><span>Collapse All</span>
-            </button>
-            <button class="outliner-btn-mini" id="outliner-focus-selected" title="Focus viewport camera on selected object">
-              <span>🎯</span><span>Focus</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="outliner-tree-container" id="outliner-tree-container">
-          <!-- Dynamically populated scene and skeleton hierarchy -->
-        </div>
-      </div>
-
-      <!-- TAB 2: DMS BEHAVIOURS & PRIMITIVE PROPS LIBRARY -->
-      <div class="panel-body" id="panel-body-library" style="display: flex;">
-
-        <!-- MULTI-CHARACTER ACTOR STAGING (OpenDMS Multi-Character) -->
-        <div class="control-group" style="margin-bottom: 6px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label style="color: #fb923c;">⚔️ Multi-Character Staging</label>
-            <span id="actor-count-badge" style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: #1e293b; color: #94a3b8; font-weight: 700;">1 ACTOR</span>
-          </div>
-          <div class="actor-staging-box">
-            <div class="actor-tabs-row">
-              <div class="actor-tab active-a1" id="actor-tab-1" title="Switch active actor to Hero (Actor 1)">🔵 A1 Hero</div>
-              <div class="actor-tab" id="actor-tab-2" title="Switch active actor to Opponent (Actor 2)" style="opacity:0.4;">🟠 A2 Opponent</div>
-            </div>
-            <div class="actor2-control-row">
-              <button class="btn-actor2-toggle" id="btn-toggle-actor2">＋ Add Opponent (Actor 2)</button>
-            </div>
-            <div style="font-size: 9.5px; color: #64748b; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;">Viewport Staging Presets</div>
-            <div class="staging-presets-grid">
-              <button class="staging-preset-btn" id="btn-stage-face-to-face" title="Face-to-Face (1.6m apart)">⚔️ Face-to-Face (1.6m)</button>
-              <button class="staging-preset-btn" id="btn-stage-tackle-runup" title="Tackle Run-Up (3.0m apart)">🏈 Tackle Run-Up (3.0m)</button>
-              <button class="staging-preset-btn" id="btn-stage-side-by-side" title="Side-by-Side (1.0m apart)">👥 Side-by-Side (1.0m)</button>
-              <button class="staging-preset-btn" id="btn-stage-pursue" title="Pursue Behind (2.0m)">🏃 Pursue Behind (2.0m)</button>
-            </div>
-          </div>
-        </div>
+      <!-- TAB 1: DMS BEHAVIOURS & TIMELINE EVENTS (Default) -->
+      <div class="panel-body" id="panel-body-behaviors" style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Quick Search Filter -->
+        <input type="text" class="outliner-search-input" id="behavior-search-input" placeholder="🔍 Filter behaviors &amp; events..." style="margin-bottom: 2px;">
 
         <!-- 1. PRIORITY ANIMATION, FORCE & CONSTRAINT EVENTS -->
-        <div class="control-group">
-          <label>Timeline Events &amp; Poses</label>
+        <div class="control-group" id="group-timeline-events">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="color: #38bdf8;">Timeline Events &amp; Poses</label>
+            <span style="font-size: 9px; color: #64748b;">Add Track</span>
+          </div>
           <button class="btn-add-layer" id="btn-add-walk-anim">
             <span>🏃</span>
             <span>+ Walk Cycle (Frames 0–60)</span>
@@ -2581,7 +2656,7 @@
         </div>
 
         <!-- 2. QUICK BEHAVIOURS (EXPANDED IN TOP MENU 'BEHAVIOURS') -->
-        <div class="control-group">
+        <div class="control-group" id="group-quick-behaviors">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
             <label style="color: #38bdf8;">Quick Behaviours</label>
             <span style="font-size: 9px; color: #64748b;">Full Suite in Top Menu ▾</span>
@@ -2605,48 +2680,114 @@
           </div>
         </div>
 
-        <!-- 3. PHYSICAL PROPS & PRIMITIVE SHAPES -->
+        <!-- 3. QUICK TIMELINE PRESETS -->
+        <div class="control-group" id="group-quick-presets" style="margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="color: #94a3b8;">Quick Timeline Presets</label>
+            <span style="font-size: 9px; color: #64748b;">1-Click</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button class="btn-add-layer" id="btn-preset-walk-trip" style="border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; background: rgba(59, 130, 246, 0.08); padding: 5px 4px; font-size: 10px;">
+              <span>🚶</span><span>Walk &rarr; Trip</span>
+            </button>
+            <button class="btn-add-layer" id="btn-preset-jog-hit" style="border-color: rgba(2, 132, 199, 0.4); color: #7dd3fc; background: rgba(2, 132, 199, 0.08); padding: 5px 4px; font-size: 10px;">
+              <span>🏃</span><span>Jog &rarr; Hit</span>
+            </button>
+            <button class="btn-add-layer" id="btn-preset-walk-stumble" style="border-color: rgba(245, 158, 11, 0.4); color: #fcd34d; background: rgba(245, 158, 11, 0.08); padding: 5px 4px; font-size: 10px;">
+              <span>💫</span><span>Push Stagger</span>
+            </button>
+            <button class="btn-add-layer" id="btn-preset-idle-stance" style="border-color: rgba(14, 165, 233, 0.4); color: #7dd3fc; background: rgba(14, 165, 233, 0.08); padding: 5px 4px; font-size: 10px;">
+              <span>🧍</span><span>Natural Stand</span>
+            </button>
+            <button class="btn-add-layer" id="btn-preset-dive-tackle" style="border-color: rgba(245, 158, 11, 0.4); color: #fde68a; background: rgba(245, 158, 11, 0.08); padding: 5px 4px; font-size: 10px;">
+              <span>🏈</span><span>Dive Tackle</span>
+            </button>
+            <button class="btn-add-layer" id="btn-preset-ragdoll" style="border-color: rgba(168, 85, 247, 0.4); color: #d8b4fe; background: rgba(168, 85, 247, 0.08); padding: 5px 4px; font-size: 10px;">
+              <span>🍂</span><span>Pure Ragdoll</span>
+            </button>
+          </div>
+          <button class="btn-add-layer" id="btn-preset-storm-fluid" style="display: none;"></button>
+          <button class="btn-add-layer" id="btn-clear-layers" style="border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; background: rgba(239, 68, 68, 0.06); margin-top: 6px; justify-content: center; font-size: 10.5px; padding: 5px;">
+            <span>🗑️</span>
+            <span>Clear All Timeline Layers</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: MULTI-CHARACTER STAGING (Dedicated Tab) -->
+      <div class="panel-body" id="panel-body-staging" style="display: none; flex-direction: column; gap: 12px;">
         <div class="control-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label>Scene Props &amp; Primitives</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="color: #fb923c; font-weight: 700; font-size: 11.5px;">⚔️ Multi-Character Actors</label>
+            <span id="actor-count-badge" style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #1e293b; color: #94a3b8; font-weight: 700;">1 ACTOR</span>
+          </div>
+          <div class="actor-staging-box" style="padding: 10px;">
+            <div class="actor-tabs-row" style="margin-bottom: 8px;">
+              <div class="actor-tab active-a1" id="actor-tab-1" title="Switch active actor to Hero (Actor 1)" style="flex: 1; text-align: center; padding: 7px;">🔵 A1 Hero</div>
+              <div class="actor-tab" id="actor-tab-2" title="Switch active actor to Opponent (Actor 2)" style="flex: 1; text-align: center; padding: 7px; opacity:0.4;">🟠 A2 Opponent</div>
+            </div>
+            <div class="actor2-control-row" style="margin-bottom: 12px;">
+              <button class="btn-actor2-toggle" id="btn-toggle-actor2" style="width: 100%; padding: 8px; justify-content: center; font-size: 11px;">＋ Add Opponent (Actor 2)</button>
+            </div>
+            <div style="font-size: 9.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px;">Tactical Viewport Staging Presets:</div>
+            <div class="staging-presets-grid" style="display: flex; flex-direction: column; gap: 6px;">
+              <button class="staging-preset-btn" id="btn-stage-face-to-face" title="Face-to-Face (1.6m apart)" style="padding: 7px 10px; justify-content: flex-start; font-size: 11px;">⚔️ Face-to-Face (1.6m Confrontation)</button>
+              <button class="staging-preset-btn" id="btn-stage-tackle-runup" title="Tackle Run-Up (3.0m apart)" style="padding: 7px 10px; justify-content: flex-start; font-size: 11px;">🏈 Tackle Run-Up (3.0m Separation)</button>
+              <button class="staging-preset-btn" id="btn-stage-side-by-side" title="Side-by-Side (1.0m apart)" style="padding: 7px 10px; justify-content: flex-start; font-size: 11px;">👥 Side-by-Side (1.0m Synchronized)</button>
+              <button class="staging-preset-btn" id="btn-stage-pursue" title="Pursue Behind (2.0m)" style="padding: 7px 10px; justify-content: flex-start; font-size: 11px;">🏃 Pursue Behind (2.0m Chase)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: PROPS, MATERIALS & PHYSICAL FIELDS (Dedicated Tab) -->
+      <div class="panel-body" id="panel-body-props" style="display: none; flex-direction: column; gap: 10px;">
+        <!-- Physical Props & Primitives -->
+        <div class="control-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="color: #f59e0b;">Scene Props &amp; Obstacles</label>
             <span style="font-size: 9px; color: #f59e0b;">Dynamic / Static</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;">
-            <button class="btn-add-layer" id="btn-prop-box" style="border-color: rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 5px 6px;" title="Spawn Box / Cube">
+          <div style="font-size: 9.5px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Basic Primitives</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button class="btn-add-layer" id="btn-prop-box" style="border-color: rgba(217, 119, 6, 0.4); color: #fbbf24; padding: 6px;" title="Spawn Box / Cube">
               <span>🧊</span><span>Box</span>
             </button>
-            <button class="btn-add-layer" id="btn-prop-sphere" style="border-color: rgba(225, 29, 72, 0.4); color: #fda4af; padding: 5px 6px;" title="Spawn Sphere / Ball">
+            <button class="btn-add-layer" id="btn-prop-sphere" style="border-color: rgba(225, 29, 72, 0.4); color: #fda4af; padding: 6px;" title="Spawn Sphere / Ball">
               <span>⚽</span><span>Sphere</span>
             </button>
-            <button class="btn-add-layer" id="btn-prop-cylinder" style="border-color: rgba(5, 150, 105, 0.4); color: #6ee7b7; padding: 5px 6px;" title="Spawn Cylinder / Pillar">
+            <button class="btn-add-layer" id="btn-prop-cylinder" style="border-color: rgba(5, 150, 105, 0.4); color: #6ee7b7; padding: 6px;" title="Spawn Cylinder / Pillar">
               <span>🥫</span><span>Cylinder</span>
             </button>
-            <button class="btn-add-layer" id="btn-prop-capsule" style="border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc; padding: 5px 6px;" title="Spawn Capsule / Pill">
+            <button class="btn-add-layer" id="btn-prop-capsule" style="border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc; padding: 6px;" title="Spawn Capsule / Pill">
               <span>💊</span><span>Capsule</span>
             </button>
-            <button class="btn-add-layer" id="btn-prop-crate" style="border-color: rgba(245, 158, 11, 0.4); color: #fde68a; padding: 5px 6px;" title="Spawn Hurdle Crate">
+          </div>
+          <div style="font-size: 9.5px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 8px 0 4px 0;">Stunt Obstacles</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button class="btn-add-layer" id="btn-prop-crate" style="border-color: rgba(245, 158, 11, 0.4); color: #fde68a; padding: 6px;" title="Spawn Hurdle Crate">
               <span>📦</span><span>Crate</span>
             </button>
-            <button class="btn-add-layer" id="btn-prop-step" style="border-color: rgba(100, 116, 139, 0.4); color: #cbd5e1; padding: 5px 6px;" title="Spawn Raised Platform">
+            <button class="btn-add-layer" id="btn-prop-step" style="border-color: rgba(100, 116, 139, 0.4); color: #cbd5e1; padding: 6px;" title="Spawn Raised Platform">
               <span>🪜</span><span>Platform</span>
             </button>
-            <button class="btn-add-layer" id="btn-prop-projectile" style="border-color: rgba(244, 63, 94, 0.4); color: #fda4af; padding: 5px 6px;" title="Launch Cannonball Projectile">
+            <button class="btn-add-layer" id="btn-prop-projectile" style="border-color: rgba(244, 63, 94, 0.4); color: #fda4af; padding: 6px;" title="Launch Cannonball Projectile">
               <span>💣</span><span>Cannonball</span>
             </button>
-            <button class="btn-add-layer" id="btn-prop-fluid" style="border-color: rgba(2, 132, 199, 0.4); color: #7dd3fc; padding: 5px 6px;" title="Spawn Water Pool (Buoyancy & Drag)">
+            <button class="btn-add-layer" id="btn-prop-fluid" style="border-color: rgba(2, 132, 199, 0.4); color: #7dd3fc; padding: 6px;" title="Spawn Water Pool (Buoyancy & Drag)">
               <span>🌊</span><span>Water Pool</span>
             </button>
           </div>
-          <button class="btn-add-layer" id="btn-clear-props" style="border-color: #334155; color: #94a3b8; justify-content: center; padding: 5px; margin-top: 5px;">
+          <button class="btn-add-layer" id="btn-clear-props" style="border-color: #334155; color: #94a3b8; justify-content: center; padding: 6px; margin-top: 8px;">
             <span>🧹</span>
             <span>Clear All Physical Props</span>
           </button>
         </div>
 
-        <!-- 4. SURFACE MATERIAL & FORCE FIELDS -->
+        <!-- Ground Surface Material (CMF) -->
         <div class="control-group">
-          <label>Surface Material (CMF)</label>
-          <select id="ground-material-select" style="width: 100%; background: #070b14; border: 1px solid #1e293b; color: #38bdf8; padding: 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+          <label style="color: #38bdf8;">Surface Material (CMF)</label>
+          <select id="ground-material-select" style="width: 100%; background: #070b14; border: 1px solid #1e293b; color: #38bdf8; padding: 7px; border-radius: 4px; font-size: 11px; font-weight: 600;">
             <option value="concrete">Default Concrete (Friction 1.4)</option>
             <option value="default">DMS High-Friction (Friction 1.4, Rest 0.2)</option>
             <option value="tarmac">High-Grip Tarmac (Friction 2.0)</option>
@@ -2659,58 +2800,40 @@
           </select>
         </div>
 
+        <!-- Physical Environmental Fields -->
         <div class="control-group">
-          <label>Pusher Wind Field (2.7): <span id="wind-val" style="color: #38bdf8;">0 N</span></label>
-          <input type="range" id="wind-slider" min="0" max="40" value="0" style="width: 100%;">
+          <label>Pusher Wind Field: <span id="wind-val" style="color: #38bdf8;">0 N</span></label>
+          <input type="range" id="wind-slider" min="0" max="40" value="0" style="width: 100%; accent-color: #38bdf8;">
         </div>
-
         <div class="control-group">
-          <label>Twister Vortex Field (2.7): <span id="twister-val" style="color: #c084fc;">0 rad/s</span></label>
+          <label>Twister Vortex Field: <span id="twister-val" style="color: #c084fc;">0 rad/s</span></label>
           <input type="range" id="twister-slider" min="0" max="30" value="0" style="width: 100%; accent-color: #c084fc;">
         </div>
-
         <div class="control-group">
-          <label>Muscle Rig Calibration: <span id="stiff-val" style="color: #34d399;">300 Nm</span></label>
+          <label>Global Muscle Stiffness: <span id="stiff-val" style="color: #34d399;">300 Nm</span></label>
           <input type="range" id="stiffness-slider" min="50" max="600" value="300" style="width: 100%; accent-color: #34d399;">
         </div>
+      </div>
 
-        <!-- 5. QUICK PRESETS -->
-        <div class="control-group" style="margin-top: 4px;">
-          <label>Quick Timeline Presets</label>
-          <button class="btn-add-layer" id="btn-preset-walk-trip" style="border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; background: rgba(59, 130, 246, 0.08);">
-            <span>🚶</span>
-            <span>Walk &rarr; Trip &rarr; Catch Fall</span>
-          </button>
-          <button class="btn-add-layer" id="btn-preset-jog-hit" style="border-color: rgba(2, 132, 199, 0.4); color: #7dd3fc; background: rgba(2, 132, 199, 0.08);">
-            <span>🏃</span>
-            <span>Athletic Jog &rarr; Heavy Hit</span>
-          </button>
-          <button class="btn-add-layer" id="btn-preset-walk-stumble" style="border-color: rgba(245, 158, 11, 0.4); color: #fcd34d; background: rgba(245, 158, 11, 0.08);">
-            <span>💫</span>
-            <span>Walk &rarr; Push &rarr; Stagger</span>
-          </button>
-          <button class="btn-add-layer" id="btn-preset-idle-stance" style="border-color: rgba(14, 165, 233, 0.4); color: #7dd3fc; background: rgba(14, 165, 233, 0.08);">
-            <span>🧍</span>
-            <span>Natural Standing Stance</span>
-          </button>
-          <button class="btn-add-layer" id="btn-preset-dive-tackle" style="border-color: rgba(245, 158, 11, 0.4); color: #fde68a; background: rgba(245, 158, 11, 0.08);">
-            <span>🏈</span>
-            <span>Obstacle Jump &amp; Dive &rarr; Tackle</span>
-          </button>
-          <button class="btn-add-layer" id="btn-preset-storm-fluid" style="border-color: rgba(2, 132, 199, 0.4); color: #7dd3fc; background: rgba(2, 132, 199, 0.08);">
-            <span>🌊</span>
-            <span>Pusher Wind &rarr; Water Pool Swim</span>
-          </button>
-          <button class="btn-add-layer" id="btn-preset-ragdoll" style="border-color: rgba(168, 85, 247, 0.4); color: #d8b4fe; background: rgba(168, 85, 247, 0.08);">
-            <span>🍂</span>
-            <span>Pure Ragdoll Drop</span>
-          </button>
-          <button class="btn-add-layer" id="btn-clear-layers" style="border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; background: rgba(239, 68, 68, 0.06);">
-            <span>🗑️</span>
-            <span>Clear All Timeline Layers</span>
-          </button>
+      <!-- TAB 4: SCENE OUTLINER TREE -->
+      <div class="panel-body" id="panel-body-outliner" style="display: none; flex-direction: column; gap: 6px;">
+        <div class="outliner-toolbar">
+          <input type="text" class="outliner-search-input" id="outliner-search-input" placeholder="🔍 Search scene objects &amp; props...">
+          <div class="outliner-quick-actions">
+            <button class="outliner-btn-mini" id="outliner-expand-all" title="Expand all tree branches">
+              <span>⊞</span><span>Expand All</span>
+            </button>
+            <button class="outliner-btn-mini" id="outliner-collapse-all" title="Collapse all tree branches">
+              <span>⊟</span><span>Collapse All</span>
+            </button>
+            <button class="outliner-btn-mini" id="outliner-focus-selected" title="Focus viewport camera on selected object">
+              <span>🎯</span><span>Focus</span>
+            </button>
+          </div>
         </div>
-
+        <div class="outliner-tree-container" id="outliner-tree-container">
+          <!-- Dynamically populated scene and skeleton hierarchy -->
+        </div>
       </div>
       <!-- Draggable Right Edge Resizer for Left Panel -->
       <div id="resizer-left-panel" class="ui-resizer-vertical ui-resizer-left-edge" title="Drag left/right to resize panel">
@@ -2795,221 +2918,266 @@
       </div>
       <div class="panel-body" id="tab-content-inspector">
 
-        <!-- ACTIVE POSE & BONE ROTATION INSPECTOR (Shown in Pose Mode) -->
-        <div class="control-group" id="pose-inspector-group" style="display: none; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.35); padding: 10px; border-radius: 6px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label style="color: #d8b4fe; margin: 0; font-weight: 700;">🦴 ACTIVE POSE EDITOR</label>
-            <span id="pose-mode-status-badge" style="font-size: 9px; padding: 2px 6px; border-radius: 3px; background: #a855f7; color: #fff; font-weight: 700;">POSE MODE ON</span>
-          </div>
-          <div class="inspector-box" id="pose-inspector-content" style="margin-top: 8px;">
-            <!-- Dynamically populated bone sliders & key controls -->
-          </div>
-        </div>
-
-        <!-- DYNAMIC LAYER PROPERTY INSPECTOR -->
-        <div class="control-group" id="layer-inspector-group" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label style="color: #38bdf8;">⚡ Selected Track Inspector</label>
-            <button id="btn-close-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Layer">&times;</button>
-          </div>
-          <div class="inspector-box" id="layer-inspector-content"></div>
-        </div>
-
-        <!-- DYNAMIC PROP PROPERTY INSPECTOR (TOGGLE SWITCH & TRANSFORM) -->
-        <div class="control-group" id="prop-inspector-group" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label style="color: #f59e0b;" id="prop-inspector-title">📦 Selected Prop Inspector</label>
-            <button id="btn-close-prop-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Prop">&times;</button>
-          </div>
-          <div class="inspector-box" id="prop-inspector-content"></div>
-        </div>
-
-        <!-- DYNAMIC BONE PROPERTY INSPECTOR -->
-        <div class="control-group" id="bone-inspector-group" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label style="color: #f43f5e;" id="bone-inspector-title">🦴 Selected Bone</label>
-            <button id="btn-close-bone-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Bone">&times;</button>
-          </div>
-          <div class="inspector-box" id="bone-inspector-content"></div>
-        </div>
-
-        <!-- BIOMECHANICAL DYNAMIC BALANCE & COUNTER-WEIGHING (ZMP) -->
-        <div class="control-group" id="zmp-balance-group" style="border: 1px solid rgba(52, 211, 153, 0.4); background: rgba(6, 78, 59, 0.12); border-radius: 8px; padding: 10px; transition: all 0.3s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label style="color: #34d399; font-weight: 700; font-size: 11.5px; display: flex; align-items: center; gap: 6px;">
-              <span>⚖️</span>
-              <span>Dynamic Balance &amp; Counter-Weighing</span>
-            </label>
-            <span id="zmp-live-badge" style="font-size: 9px; padding: 2px 7px; border-radius: 4px; background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.45); font-weight: 700; letter-spacing: 0.5px;">ZMP ACTIVE</span>
-          </div>
-
-          <div class="inspector-box" style="gap: 8px; background: rgba(15, 23, 42, 0.75); border-color: rgba(52, 211, 153, 0.25);">
-            <!-- Active Toggle & Counter-Weighing -->
-            <div class="inspector-row">
-              <label style="font-size: 11px; color: #f8fafc; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" id="chk-auto-balance" checked style="accent-color: #34d399; width: 15px; height: 15px;">
-                <span style="font-weight: 700; color: #34d399;">Active ZMP Inverted Pendulum Balance</span>
-              </label>
-            </div>
-            <div class="inspector-row">
-              <label style="font-size: 10.5px; color: #cbd5e1; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" id="chk-counter-weighing" checked style="accent-color: #34d399; width: 14px; height: 14px;">
-                <span>Dynamic Arm &amp; Torso Counter-Weighing</span>
-              </label>
-            </div>
-
-            <!-- Recovery Strength -->
-            <div class="inspector-row">
-              <label><span>Balance Recovery Strength</span><span id="zmp-strength-val" style="color: #38bdf8; font-weight: 700;">100%</span></label>
-              <input type="range" id="zmp-recovery-strength" min="30" max="250" step="5" value="100" style="width: 100%; accent-color: #38bdf8;">
-            </div>
-
-            <!-- Fall Threshold Angle -->
-            <div class="inspector-row">
-              <label><span>Loss of Balance Tilt Limit</span><span id="zmp-tilt-val" style="color: #fbbf24; font-weight: 700;">45&deg;</span></label>
-              <input type="range" id="zmp-tilt-threshold" min="20" max="70" step="5" value="45" style="width: 100%; accent-color: #fbbf24;">
-            </div>
-
-            <!-- Live Status Readout -->
-            <div style="background: rgba(7, 11, 20, 0.75); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 5px; padding: 8px 10px; font-size: 10.5px; color: #94a3b8; display: flex; flex-direction: column; gap: 4px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Equilibrium State:</span>
-                <strong id="zmp-status-text" style="color: #34d399; font-size: 10.5px;">✓ Stable Equilibrium</strong>
-              </div>
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Capture Point (ZMP Offset):</span>
-                <span id="zmp-displacement-text" style="color: #38bdf8; font-family: monospace; font-size: 11px;">0.00 m</span>
-              </div>
-            </div>
-
-            <!-- Interactive Push / Shove Test Triggers -->
-            <div style="margin-top: 6px;">
-              <div style="font-size: 9.5px; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Interactive Shove Perturbation Test:</div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                <button class="btn" id="btn-test-shove-front" style="padding: 6px 4px; font-size: 10.5px; justify-content: center; border-color: rgba(56, 189, 248, 0.5); color: #38bdf8; background: rgba(56, 189, 248, 0.12); font-weight: 600;" title="Simulate 45N impulse from front: character takes recovery step & counter-balances">
-                  👉 Push Front (45N)
-                </button>
-                <button class="btn" id="btn-test-shove-back" style="padding: 6px 4px; font-size: 10.5px; justify-content: center; border-color: rgba(245, 158, 11, 0.5); color: #fbbf24; background: rgba(245, 158, 11, 0.12); font-weight: 600;" title="Simulate 55N impulse from back: character steps forward & swings arms">
-                  👈 Push Back (55N)
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- CHARACTER 3D VIEWPORT AXIS POSITIONING -->
-        <div class="control-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label>Character Transform (X/Y/Z)</label>
-            <button class="btn" id="btn-center-char" style="padding: 2px 7px; font-size: 10px;">Reset (0,0,0)</button>
-          </div>
-          <div class="inspector-box">
-            <button class="btn" id="btn-toggle-move-gizmo" style="width: 100%; justify-content: center; border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.1);">
-              <span>✥</span>
-              <span>3D Move Axis Gizmo: ON</span>
-            </button>
-            <div class="inspector-row">
-              <label><span>X Axis (Left / Right)</span><span id="char-pos-x-val" style="color: #f87171;">0.00 m</span></label>
-              <input type="range" id="char-pos-x" min="-6" max="6" step="0.05" value="0" style="width: 100%; accent-color: #ef4444;">
-            </div>
-            <div class="inspector-row">
-              <label><span>Y Axis (Elevation / Drop)</span><span id="char-pos-y-val" style="color: #4ade80;">0.00 m</span></label>
-              <input type="range" id="char-pos-y" min="0" max="5" step="0.05" value="0" style="width: 100%; accent-color: #22c55e;">
-            </div>
-            <div class="inspector-row">
-              <label><span>Z Axis (Forward / Back)</span><span id="char-pos-z-val" style="color: #60a5fa;">0.00 m</span></label>
-              <input type="range" id="char-pos-z" min="-6" max="6" step="0.05" value="0" style="width: 100%; accent-color: #3b82f6;">
-            </div>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label>Character 3D Model &amp; Rig</label>
-            <span id="rig-status-badge" style="font-size: 9px; color: #34d399; background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35); padding: 1px 6px; border-radius: 4px; font-weight: 600;">15/15 Bones</span>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-              <button class="btn" id="btn-model-mixamo" style="justify-content: center; font-size: 10.5px; padding: 5px 4px;">
-                <span>🏃</span>
-                <span>Mixamo</span>
-              </button>
-              <button class="btn" id="btn-model-sam" style="justify-content: center; font-size: 10.5px; padding: 5px 4px;">
-                <span>🧬</span>
-                <span>SAM Human</span>
-              </button>
-              <button class="btn" id="btn-model-mannequin" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.1); justify-content: center; font-size: 10.5px; padding: 5px 4px;">
-                <span>🤖</span>
-                <span>Mannequin</span>
-              </button>
-            </div>
-            <button class="btn" id="btn-import-custom-rig" onclick="document.getElementById('input-mixamo-file').click()" style="justify-content: center; border-color: rgba(56, 189, 248, 0.45); color: #7dd3fc; background: rgba(56, 189, 248, 0.08); font-size: 11px;">
-              <span>📂</span>
-              <span>Import Rigged Character (.fbx / .glb)</span>
-            </button>
-            <button class="btn" id="btn-import-custom-anim-right" onclick="document.getElementById('input-anim-file').click()" style="justify-content: center; border-color: rgba(168, 85, 247, 0.45); color: #d8b4fe; background: rgba(168, 85, 247, 0.08); font-size: 11px;">
-              <span>🎬</span>
-              <span>Import &amp; Retarget Animation (.fbx / .bvh)</span>
-            </button>
-
-            <!-- Collapsible Character Rig Calibration & Retargeting Controls -->
-            <div class="inspector-box" id="rig-calibration-box" style="margin-top: 2px; padding: 8px 9px; gap: 6px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 4px;">
-                <span style="font-size: 10px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">⚙️ Rig Retarget Calibration</span>
-                <button class="btn" id="btn-reset-rig-cal" style="padding: 1px 6px; font-size: 9px;" title="Reset Rig Calibration Offsets">Reset</button>
-              </div>
-              <div id="rig-diag-summary" style="font-size: 9.5px; color: #94a3b8; line-height: 1.35;">
-                Active Rig: <strong style="color: #e2e8f0;">X Bot</strong> &bull; <span style="color: #38bdf8;">T-Pose Calibrated</span>
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label style="font-size: 10px; color: #cbd5e1; display: flex; align-items: center; gap: 6px; cursor: pointer; text-transform: none;">
-                  <input type="checkbox" id="cal-auto-tpose" checked>
-                  <span>Auto A-Pose &rarr; T-Pose Limb Alignment</span>
-                </label>
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label style="font-size: 10px; color: #34d399; display: flex; align-items: center; gap: 6px; cursor: pointer; text-transform: none;">
-                  <input type="checkbox" id="cal-auto-ground-clamp" checked>
-                  <span>Anti-Ground-Penetration Foot Clamp</span>
-                </label>
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label><span>Arm Clearance (Spread)</span><span id="cal-arm-spread-val" style="color: #38bdf8;">0&deg;</span></label>
-                <input type="range" id="cal-arm-spread" min="-30" max="45" step="1" value="0" style="width: 100%; accent-color: #38bdf8;">
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label><span>Thigh Clearance (Stance)</span><span id="cal-thigh-spread-val" style="color: #a78bfa;">0&deg;</span></label>
-                <input type="range" id="cal-thigh-spread" min="0" max="20" step="1" value="0" style="width: 100%; accent-color: #a78bfa;">
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label><span>Foot Sole Margin</span><span id="cal-foot-sole-val" style="color: #fbbf24;">0.04 m</span></label>
-                <input type="range" id="cal-foot-sole-offset" min="0.00" max="0.20" step="0.005" value="0.04" style="width: 100%; accent-color: #fbbf24;">
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label><span>Body Girth (Physics)</span><span id="cal-body-girth-val" style="color: #f43f5e;">1.00x</span></label>
-                <input type="range" id="cal-body-girth" min="0.60" max="1.80" step="0.05" value="1.0" style="width: 100%; accent-color: #f43f5e;">
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label><span>Scale Multiplier</span><span id="cal-scale-mult-val" style="color: #34d399;">1.00x</span></label>
-                <input type="range" id="cal-scale-mult" min="0.25" max="2.5" step="0.05" value="1.0" style="width: 100%; accent-color: #34d399;">
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label><span>Ground Offset Y</span><span id="cal-ground-y-val" style="color: #fbbf24;">0.00 m</span></label>
-                <input type="range" id="cal-ground-y" min="-0.6" max="0.6" step="0.01" value="0" style="width: 100%; accent-color: #fbbf24;">
-              </div>
-              <div class="inspector-row" style="padding: 2px 4px;">
-                <label><span>Facing Yaw Offset</span><span id="cal-yaw-offset-val" style="color: #c084fc;">0&deg;</span></label>
-                <input type="range" id="cal-yaw-offset" min="-180" max="180" step="5" value="0" style="width: 100%; accent-color: #c084fc;">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label>Session Reset</label>
-          <button class="btn" id="btn-reset-tpose">
-            ⏮ Revert to Pristine T-Pose
+        <!-- Context Switcher: Selected Item vs Character Rig -->
+        <div class="inspector-context-switch">
+          <button id="subtab-btn-track" class="context-pill active" title="View &amp; edit selected timeline track, prop, or bone">
+            <span>⚡</span><span>Selected Item</span>
           </button>
+          <button id="subtab-btn-character" class="context-pill" title="Character balance, transform, and rig calibration">
+            <span>⚖️</span><span>Character &amp; Rig</span>
+          </button>
+        </div>
+
+        <!-- SUB-TAB 1: SELECTED TRACK / PROP / BONE -->
+        <div id="subtab-content-track" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Empty State (shown when nothing is selected) -->
+          <div id="track-inspector-empty-card" class="control-group" style="text-align: center; padding: 24px 12px; background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(56, 189, 248, 0.2); border-radius: 8px;">
+            <div style="font-size: 26px; margin-bottom: 6px; opacity: 0.7;">⚡</div>
+            <div style="font-size: 11px; font-weight: 700; color: #cbd5e1; margin-bottom: 4px;">No Item Selected</div>
+            <div style="font-size: 10px; color: #64748b; line-height: 1.4;">Click any behavior event or clip in the bottom timeline, or click a 3D bone or prop in the scene to inspect and tune its live physical properties.</div>
+          </div>
+
+          <!-- ACTIVE POSE & BONE ROTATION INSPECTOR (Shown in Pose Mode) -->
+          <div class="control-group" id="pose-inspector-group" style="display: none; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.35); padding: 10px; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="color: #d8b4fe; margin: 0; font-weight: 700;">🦴 ACTIVE POSE EDITOR</label>
+              <span id="pose-mode-status-badge" style="font-size: 9px; padding: 2px 6px; border-radius: 3px; background: #a855f7; color: #fff; font-weight: 700;">POSE MODE ON</span>
+            </div>
+            <div class="inspector-box" id="pose-inspector-content" style="margin-top: 8px;">
+              <!-- Dynamically populated bone sliders & key controls -->
+            </div>
+          </div>
+
+          <!-- DYNAMIC LAYER PROPERTY INSPECTOR -->
+          <div class="control-group" id="layer-inspector-group" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="color: #38bdf8;">⚡ Selected Track Inspector</label>
+              <button id="btn-close-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Layer">&times;</button>
+            </div>
+            <div class="inspector-box" id="layer-inspector-content"></div>
+          </div>
+
+          <!-- DYNAMIC PROP PROPERTY INSPECTOR (TOGGLE SWITCH & TRANSFORM) -->
+          <div class="control-group" id="prop-inspector-group" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="color: #f59e0b;" id="prop-inspector-title">📦 Selected Prop Inspector</label>
+              <button id="btn-close-prop-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Prop">&times;</button>
+            </div>
+            <div class="inspector-box" id="prop-inspector-content"></div>
+          </div>
+
+          <!-- DYNAMIC BONE PROPERTY INSPECTOR -->
+          <div class="control-group" id="bone-inspector-group" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="color: #f43f5e;" id="bone-inspector-title">🦴 Selected Bone</label>
+              <button id="btn-close-bone-inspector" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Deselect Bone">&times;</button>
+            </div>
+            <div class="inspector-box" id="bone-inspector-content"></div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: CHARACTER, RIG & DYNAMIC BALANCE -->
+        <div id="subtab-content-character" style="display: none; flex-direction: column; gap: 8px;">
+          <!-- BIOMECHANICAL DYNAMIC BALANCE & COUNTER-WEIGHING (ZMP) -->
+          <div class="accordion-card" id="zmp-balance-group" style="border: 1px solid rgba(52, 211, 153, 0.4); background: rgba(6, 78, 59, 0.12);">
+            <div class="accordion-header" style="color: #34d399;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span>⚖️</span>
+                <span>Dynamic Balance &amp; Counter-Weighing</span>
+              </span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span id="zmp-live-badge" style="font-size: 8.5px; padding: 2px 6px; border-radius: 4px; background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.45); font-weight: 700;">ZMP ACTIVE</span>
+                <span class="accordion-chevron">▼</span>
+              </div>
+            </div>
+            <div class="accordion-content">
+              <div class="inspector-box" style="gap: 8px; background: rgba(15, 23, 42, 0.75); border-color: rgba(52, 211, 153, 0.25);">
+                <!-- Active Toggle & Counter-Weighing -->
+                <div class="inspector-row">
+                  <label style="font-size: 11px; color: #f8fafc; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="chk-auto-balance" checked style="accent-color: #34d399; width: 15px; height: 15px;">
+                    <span style="font-weight: 700; color: #34d399;">Active ZMP Inverted Pendulum Balance</span>
+                  </label>
+                </div>
+                <div class="inspector-row">
+                  <label style="font-size: 10.5px; color: #cbd5e1; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="chk-counter-weighing" checked style="accent-color: #34d399; width: 14px; height: 14px;">
+                    <span>Dynamic Arm &amp; Torso Counter-Weighing</span>
+                  </label>
+                </div>
+
+                <!-- Recovery Strength -->
+                <div class="inspector-row">
+                  <label><span>Balance Recovery Strength</span><span id="zmp-strength-val" style="color: #38bdf8; font-weight: 700;">100%</span></label>
+                  <input type="range" id="zmp-recovery-strength" min="30" max="250" step="5" value="100" style="width: 100%; accent-color: #38bdf8;">
+                </div>
+
+                <!-- Fall Threshold Angle -->
+                <div class="inspector-row">
+                  <label><span>Loss of Balance Tilt Limit</span><span id="zmp-tilt-val" style="color: #fbbf24; font-weight: 700;">45&deg;</span></label>
+                  <input type="range" id="zmp-tilt-threshold" min="20" max="70" step="5" value="45" style="width: 100%; accent-color: #fbbf24;">
+                </div>
+
+                <!-- Live Status Readout -->
+                <div style="background: rgba(7, 11, 20, 0.75); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 5px; padding: 8px 10px; font-size: 10.5px; color: #94a3b8; display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Equilibrium State:</span>
+                    <strong id="zmp-status-text" style="color: #34d399; font-size: 10.5px;">✓ Stable Equilibrium</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Capture Point (ZMP Offset):</span>
+                    <span id="zmp-displacement-text" style="color: #38bdf8; font-family: monospace; font-size: 11px;">0.00 m</span>
+                  </div>
+                </div>
+
+                <!-- Interactive Push / Shove Test Triggers -->
+                <div style="margin-top: 6px;">
+                  <div style="font-size: 9.5px; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Interactive Shove Perturbation Test:</div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <button class="btn" id="btn-test-shove-front" style="padding: 6px 4px; font-size: 10.5px; justify-content: center; border-color: rgba(56, 189, 248, 0.5); color: #38bdf8; background: rgba(56, 189, 248, 0.12); font-weight: 600;" title="Simulate 45N impulse from front: character takes recovery step &amp; counter-balances">
+                      👉 Push Front (45N)
+                    </button>
+                    <button class="btn" id="btn-test-shove-back" style="padding: 6px 4px; font-size: 10.5px; justify-content: center; border-color: rgba(245, 158, 11, 0.5); color: #fbbf24; background: rgba(245, 158, 11, 0.12); font-weight: 600;" title="Simulate 55N impulse from back: character steps forward &amp; swings arms">
+                      👈 Push Back (55N)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHARACTER 3D VIEWPORT AXIS POSITIONING -->
+          <div class="accordion-card">
+            <div class="accordion-header">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span>✥</span>
+                <span>Character Transform (X/Y/Z)</span>
+              </span>
+              <span class="accordion-chevron">▼</span>
+            </div>
+            <div class="accordion-content">
+              <div style="display: flex; justify-content: flex-end; margin-bottom: 4px;">
+                <button class="btn" id="btn-center-char" style="padding: 2px 7px; font-size: 10px;">Reset (0,0,0)</button>
+              </div>
+              <div class="inspector-box">
+                <button class="btn" id="btn-toggle-move-gizmo" style="width: 100%; justify-content: center; border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.1);">
+                  <span>✥</span>
+                  <span>3D Move Axis Gizmo: ON</span>
+                </button>
+                <div class="inspector-row">
+                  <label><span>X Axis (Left / Right)</span><span id="char-pos-x-val" style="color: #f87171;">0.00 m</span></label>
+                  <input type="range" id="char-pos-x" min="-6" max="6" step="0.05" value="0" style="width: 100%; accent-color: #ef4444;">
+                </div>
+                <div class="inspector-row">
+                  <label><span>Y Axis (Elevation / Drop)</span><span id="char-pos-y-val" style="color: #4ade80;">0.00 m</span></label>
+                  <input type="range" id="char-pos-y" min="0" max="5" step="0.05" value="0" style="width: 100%; accent-color: #22c55e;">
+                </div>
+                <div class="inspector-row">
+                  <label><span>Z Axis (Forward / Back)</span><span id="char-pos-z-val" style="color: #60a5fa;">0.00 m</span></label>
+                  <input type="range" id="char-pos-z" min="-6" max="6" step="0.05" value="0" style="width: 100%; accent-color: #3b82f6;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHARACTER 3D MODEL & RIG -->
+          <div class="accordion-card">
+            <div class="accordion-header">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span>🤖</span>
+                <span>Character Model &amp; Rig</span>
+              </span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span id="rig-status-badge" style="font-size: 8.5px; color: #34d399; background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35); padding: 1px 6px; border-radius: 4px; font-weight: 600;">15/15 Bones</span>
+                <span class="accordion-chevron">▼</span>
+              </div>
+            </div>
+            <div class="accordion-content">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+                  <button class="btn" id="btn-model-mixamo" style="justify-content: center; font-size: 10.5px; padding: 5px 4px;">
+                    <span>🏃</span>
+                    <span>Mixamo</span>
+                  </button>
+                  <button class="btn" id="btn-model-sam" style="justify-content: center; font-size: 10.5px; padding: 5px 4px;">
+                    <span>🧬</span>
+                    <span>SAM Human</span>
+                  </button>
+                  <button class="btn" id="btn-model-mannequin" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.1); justify-content: center; font-size: 10.5px; padding: 5px 4px;">
+                    <span>🤖</span>
+                    <span>Mannequin</span>
+                  </button>
+                </div>
+                <button class="btn" id="btn-import-custom-rig" onclick="document.getElementById('input-mixamo-file').click()" style="justify-content: center; border-color: rgba(56, 189, 248, 0.45); color: #7dd3fc; background: rgba(56, 189, 248, 0.08); font-size: 11px;">
+                  <span>📂</span>
+                  <span>Import Rigged Character (.fbx / .glb)</span>
+                </button>
+                <button class="btn" id="btn-import-custom-anim-right" onclick="document.getElementById('input-anim-file').click()" style="justify-content: center; border-color: rgba(168, 85, 247, 0.45); color: #d8b4fe; background: rgba(168, 85, 247, 0.08); font-size: 11px;">
+                  <span>🎬</span>
+                  <span>Import &amp; Retarget Animation (.fbx / .bvh)</span>
+                </button>
+
+                <!-- Collapsible Character Rig Calibration & Retargeting Controls -->
+                <div class="inspector-box" id="rig-calibration-box" style="margin-top: 2px; padding: 8px 9px; gap: 6px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 4px;">
+                    <span style="font-size: 10px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">⚙️ Rig Retarget Calibration</span>
+                    <button class="btn" id="btn-reset-rig-cal" style="padding: 1px 6px; font-size: 9px;" title="Reset Rig Calibration Offsets">Reset</button>
+                  </div>
+                  <div id="rig-diag-summary" style="font-size: 9.5px; color: #94a3b8; line-height: 1.35;">
+                    Active Rig: <strong style="color: #e2e8f0;">X Bot</strong> &bull; <span style="color: #38bdf8;">T-Pose Calibrated</span>
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label style="font-size: 10px; color: #cbd5e1; display: flex; align-items: center; gap: 6px; cursor: pointer; text-transform: none;">
+                      <input type="checkbox" id="cal-auto-tpose" checked>
+                      <span>Auto A-Pose &rarr; T-Pose Limb Alignment</span>
+                    </label>
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label style="font-size: 10px; color: #34d399; display: flex; align-items: center; gap: 6px; cursor: pointer; text-transform: none;">
+                      <input type="checkbox" id="cal-auto-ground-clamp" checked>
+                      <span>Anti-Ground-Penetration Foot Clamp</span>
+                    </label>
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label><span>Arm Clearance (Spread)</span><span id="cal-arm-spread-val" style="color: #38bdf8;">0&deg;</span></label>
+                    <input type="range" id="cal-arm-spread" min="-30" max="45" step="1" value="0" style="width: 100%; accent-color: #38bdf8;">
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label><span>Thigh Clearance (Stance)</span><span id="cal-thigh-spread-val" style="color: #a78bfa;">0&deg;</span></label>
+                    <input type="range" id="cal-thigh-spread" min="0" max="20" step="1" value="0" style="width: 100%; accent-color: #a78bfa;">
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label><span>Foot Sole Margin</span><span id="cal-foot-sole-val" style="color: #fbbf24;">0.04 m</span></label>
+                    <input type="range" id="cal-foot-sole-offset" min="0.00" max="0.20" step="0.005" value="0.04" style="width: 100%; accent-color: #fbbf24;">
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label><span>Body Girth (Physics)</span><span id="cal-body-girth-val" style="color: #f43f5e;">1.00x</span></label>
+                    <input type="range" id="cal-body-girth" min="0.60" max="1.80" step="0.05" value="1.0" style="width: 100%; accent-color: #f43f5e;">
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label><span>Scale Multiplier</span><span id="cal-scale-mult-val" style="color: #34d399;">1.00x</span></label>
+                    <input type="range" id="cal-scale-mult" min="0.25" max="2.5" step="0.05" value="1.0" style="width: 100%; accent-color: #34d399;">
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label><span>Ground Offset Y</span><span id="cal-ground-y-val" style="color: #fbbf24;">0.00 m</span></label>
+                    <input type="range" id="cal-ground-y" min="-0.6" max="0.6" step="0.01" value="0" style="width: 100%; accent-color: #fbbf24;">
+                  </div>
+                  <div class="inspector-row" style="padding: 2px 4px;">
+                    <label><span>Facing Yaw Offset</span><span id="cal-yaw-offset-val" style="color: #c084fc;">0&deg;</span></label>
+                    <input type="range" id="cal-yaw-offset" min="-180" max="180" step="5" value="0" style="width: 100%; accent-color: #c084fc;">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SESSION RESET -->
+          <div class="control-group" style="margin-top: 4px;">
+            <label style="color: #64748b;">Session Reset</label>
+            <button class="btn" id="btn-reset-tpose">
+              ⏮ Revert to Pristine T-Pose
+            </button>
+          </div>
         </div>
 
       </div>

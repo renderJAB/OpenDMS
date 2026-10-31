@@ -944,6 +944,8 @@ function togglePoseMode(forceState = null) {
 
     const tabInspector = document.getElementById('tab-btn-inspector');
     if (tabInspector) tabInspector.click();
+    if (typeof switchRightPanelContext === 'function') switchRightPanelContext('track');
+    if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
 
     selectPoseBone(selectedPoseBone || 'Pelvis');
   } else {
@@ -965,6 +967,7 @@ function togglePoseMode(forceState = null) {
     if (poseGroup) {
       poseGroup.style.display = 'none';
     }
+    if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
 
     if (transformControls && moveGizmoEnabled && !timeline.isBakingLive) {
       const helper = typeof transformControls.getHelper === 'function' ? transformControls.getHelper() : transformControls;
@@ -2980,10 +2983,13 @@ function renderLayerInspector() {
   if (!layer) {
     groupEl.style.display = 'none';
     contentEl.innerHTML = '';
+    if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
     return;
   }
 
+  if (typeof switchRightPanelContext === 'function') switchRightPanelContext('track');
   groupEl.style.display = 'flex';
+  if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
   const duration = layer.endFrame - layer.startFrame;
   const intensityPct = Math.round((layer.intensity ?? 1.0) * 100);
   const speedVal = (layer.speed ?? 1.0).toFixed(2);
@@ -4177,6 +4183,7 @@ function deselectProp() {
   if (propGroup) propGroup.style.display = 'none';
   if (propContent) propContent.innerHTML = '';
   renderSceneOutliner();
+  if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
 }
 
 function updatePropInspectorFields(prop) {
@@ -4241,10 +4248,13 @@ function renderPropInspector() {
   if (!prop) {
     groupEl.style.display = 'none';
     contentEl.innerHTML = '';
+    if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
     return;
   }
 
+  if (typeof switchRightPanelContext === 'function') switchRightPanelContext('track');
   groupEl.style.display = 'flex';
+  if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
   const shapeIcons = {
     box: '🧊',
     sphere: '⚽',
@@ -4533,23 +4543,75 @@ function renderPropInspector() {
 // ==========================================================================
 
 function switchLeftPanelTab(tabName) {
+  if (tabName === 'library') tabName = 'behaviors';
   activeLeftTab = tabName;
-  const tabOutliner = document.getElementById('tab-btn-outliner');
+
+  const tabMap = {
+    behaviors: { btn: document.getElementById('tab-btn-behaviors'), panel: document.getElementById('panel-body-behaviors') },
+    staging:   { btn: document.getElementById('tab-btn-staging'),   panel: document.getElementById('panel-body-staging') },
+    props:     { btn: document.getElementById('tab-btn-props'),     panel: document.getElementById('panel-body-props') },
+    outliner:  { btn: document.getElementById('tab-btn-outliner'),  panel: document.getElementById('panel-body-outliner') }
+  };
+
+  Object.entries(tabMap).forEach(([key, item]) => {
+    if (key === tabName) {
+      item.btn?.classList.add('active');
+      if (item.panel) item.panel.style.display = 'flex';
+    } else {
+      item.btn?.classList.remove('active');
+      if (item.panel) item.panel.style.display = 'none';
+    }
+  });
+
+  // Backward compatibility alias for legacy tab-btn-library / panel-body-library if present
   const tabLibrary = document.getElementById('tab-btn-library');
-  const panelOutliner = document.getElementById('panel-body-outliner');
   const panelLibrary = document.getElementById('panel-body-library');
+  if (tabLibrary) {
+    if (tabName === 'behaviors') tabLibrary.classList.add('active');
+    else tabLibrary.classList.remove('active');
+  }
+  if (panelLibrary && panelLibrary.id === 'panel-body-library') {
+    panelLibrary.style.display = tabName === 'behaviors' ? 'flex' : 'none';
+  }
 
   if (tabName === 'outliner') {
-    tabOutliner?.classList.add('active');
-    tabLibrary?.classList.remove('active');
-    if (panelOutliner) panelOutliner.style.display = 'flex';
-    if (panelLibrary) panelLibrary.style.display = 'none';
     renderSceneOutliner();
+  }
+}
+
+function updateEmptyTrackInspectorState() {
+  const emptyCard = document.getElementById('track-inspector-empty-card');
+  if (!emptyCard) return;
+  const poseGrp = document.getElementById('pose-inspector-group');
+  const layerGrp = document.getElementById('layer-inspector-group');
+  const propGrp = document.getElementById('prop-inspector-group');
+  const boneGrp = document.getElementById('bone-inspector-group');
+
+  const hasActiveItem = (poseGrp && poseGrp.style.display !== 'none') ||
+                        (layerGrp && layerGrp.style.display !== 'none') ||
+                        (propGrp && propGrp.style.display !== 'none') ||
+                        (boneGrp && boneGrp.style.display !== 'none');
+
+  emptyCard.style.display = hasActiveItem ? 'none' : 'block';
+}
+
+function switchRightPanelContext(subTab) {
+  const btnTrack = document.getElementById('subtab-btn-track');
+  const btnChar = document.getElementById('subtab-btn-character');
+  const contentTrack = document.getElementById('subtab-content-track');
+  const contentChar = document.getElementById('subtab-content-character');
+
+  if (subTab === 'character') {
+    btnTrack?.classList.remove('active');
+    btnChar?.classList.add('active');
+    if (contentTrack) contentTrack.style.display = 'none';
+    if (contentChar) contentChar.style.display = 'flex';
   } else {
-    tabOutliner?.classList.remove('active');
-    tabLibrary?.classList.add('active');
-    if (panelOutliner) panelOutliner.style.display = 'none';
-    if (panelLibrary) panelLibrary.style.display = 'flex';
+    btnTrack?.classList.add('active');
+    btnChar?.classList.remove('active');
+    if (contentTrack) contentTrack.style.display = 'flex';
+    if (contentChar) contentChar.style.display = 'none';
+    updateEmptyTrackInspectorState();
   }
 }
 
@@ -4605,6 +4667,7 @@ function deselectBone() {
   if (boneContent) boneContent.innerHTML = '';
   renderSceneOutliner();
   renderViewportBoneTree();
+  if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
 }
 
 function renderBoneInspector(boneName) {
@@ -4618,8 +4681,13 @@ function renderBoneInspector(boneName) {
   if (!bodyData || !bodyData.mesh) {
     groupEl.style.display = 'none';
     contentEl.innerHTML = '';
+    if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
     return;
   }
+
+  if (typeof switchRightPanelContext === 'function') switchRightPanelContext('track');
+  groupEl.style.display = 'flex';
+  if (typeof updateEmptyTrackInspectorState === 'function') updateEmptyTrackInspectorState();
 
   groupEl.style.display = 'flex';
   const def = SKELETON_TREE[boneName] || {};
@@ -5830,10 +5898,46 @@ function setupUI() {
     });
   }
 
-  // --- SCENE OUTLINER & TAB CONTROLS ---
+  // --- LEFT PANEL SUB-TAB CONTROLS ---
+  document.getElementById('tab-btn-behaviors')?.addEventListener('click', () => switchLeftPanelTab('behaviors'));
+  document.getElementById('tab-btn-staging')?.addEventListener('click', () => switchLeftPanelTab('staging'));
+  document.getElementById('tab-btn-props')?.addEventListener('click', () => switchLeftPanelTab('props'));
   document.getElementById('tab-btn-outliner')?.addEventListener('click', () => switchLeftPanelTab('outliner'));
-  document.getElementById('tab-btn-library')?.addEventListener('click', () => switchLeftPanelTab('library'));
+  document.getElementById('tab-btn-library')?.addEventListener('click', () => switchLeftPanelTab('behaviors'));
 
+  // --- RIGHT PANEL INSPECTOR CONTEXT SWITCH CONTROLS ---
+  document.getElementById('subtab-btn-track')?.addEventListener('click', () => switchRightPanelContext('track'));
+  document.getElementById('subtab-btn-character')?.addEventListener('click', () => switchRightPanelContext('character'));
+
+  // --- ACCORDION CARD COLLAPSIBLE HEADERS ---
+  document.querySelectorAll('.accordion-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const card = header.closest('.accordion-card');
+      if (card) card.classList.toggle('collapsed');
+    });
+  });
+
+  // --- REAL-TIME BEHAVIORS SEARCH FILTER ---
+  document.getElementById('behavior-search-input')?.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    const container = document.getElementById('panel-body-behaviors');
+    if (!container) return;
+    container.querySelectorAll('.control-group, .timeline-event-palette .palette-btn').forEach(el => {
+      // Don't hide the search bar itself
+      if (el.contains(e.target)) return;
+      if (!q) {
+        el.style.display = '';
+      } else {
+        const text = el.innerText.toLowerCase();
+        el.style.display = text.includes(q) ? '' : 'none';
+      }
+    });
+  });
+
+  // Initialize Right Inspector Empty Card state
+  updateEmptyTrackInspectorState();
+
+  // --- SCENE OUTLINER CONTROLS ---
   document.getElementById('outliner-search-input')?.addEventListener('input', (e) => {
     outlinerSearchQuery = e.target.value.trim().toLowerCase();
     renderSceneOutliner();
@@ -8507,12 +8611,14 @@ function setupUI() {
     const btnJumpHeader = document.getElementById('btn-header-balance-jump');
     const balanceCard = document.getElementById('zmp-balance-group');
 
-    // Header Quick-Jump Button: Opens Inspector tab, scrolls to Balance card, and flashes emerald outline
+    // Header Quick-Jump Button: Opens Inspector tab, switches to Character subtab, uncollapses Balance card, scrolls to it, and flashes emerald outline
     if (btnJumpHeader) {
       btnJumpHeader.addEventListener('click', () => {
         const tabBtnInspector = document.getElementById('tab-btn-inspector');
         if (tabBtnInspector) tabBtnInspector.click();
+        if (typeof switchRightPanelContext === 'function') switchRightPanelContext('character');
         if (balanceCard) {
+          balanceCard.classList.remove('collapsed');
           balanceCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
           balanceCard.classList.remove('zmp-highlight');
           void balanceCard.offsetWidth; // re-trigger animation
