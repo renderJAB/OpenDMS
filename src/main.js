@@ -6269,14 +6269,32 @@ function setupUI() {
   document.getElementById('btn-resim')?.addEventListener('click', triggerResim);
   document.getElementById('btn-resim-header')?.addEventListener('click', triggerResim);
 
-  // Reset to Pristine T-Pose
-  document.getElementById('btn-reset-tpose').addEventListener('click', () => {
+  // Unified Revert to Pristine T-Pose function
+  function revertToPristineTPose() {
+    historyManager.pushState('Revert to Pristine T-Pose');
+    if (character && typeof character.resetToTPose === 'function') {
+      character.resetToTPose();
+    }
+    if (actor2Character && typeof actor2Character.resetToTPose === 'function') {
+      actor2Character.resetToTPose();
+    }
+    if (mixamoBridge && mixamoBridge.isVisible) mixamoBridge.update();
+    if (actor2MixamoBridge && actor2MixamoBridge.isVisible) actor2MixamoBridge.update();
     timeline.resetSimulation();
     timeline.seek(0);
-    if (mixamoBridge && mixamoBridge.isVisible) mixamoBridge.update();
     updateSimulationStatusUI();
     updateTimelineUI();
-  });
+    renderTimelineLayers();
+    showNotification('🧘 Character reverted to Pristine T-Pose (Frame 0)', 'success');
+  }
+
+  // Hook all T-Pose triggers across dashboard
+  document.getElementById('btn-reset-tpose')?.addEventListener('click', revertToPristineTPose);
+  document.getElementById('btn-header-reset-tpose')?.addEventListener('click', revertToPristineTPose);
+  document.getElementById('btn-timeline-reset-tpose')?.addEventListener('click', revertToPristineTPose);
+  document.getElementById('btn-quick-tpose-panel')?.addEventListener('click', revertToPristineTPose);
+  document.getElementById('hud-bone-reset-tpose')?.addEventListener('click', revertToPristineTPose);
+  document.getElementById('menu-revert-tpose')?.addEventListener('click', revertToPristineTPose);
 
   // --- CHARACTER 3D MODEL VISUALIZATION CONTROLS ---
   const btnModelMixamo = document.getElementById('btn-model-mixamo');
@@ -10050,10 +10068,7 @@ function initKeyboardShortcuts() {
     // T: Reset Character to T-Pose
     if (e.code === 'KeyT' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       e.preventDefault();
-      character.resetToTPose();
-      if (mixamoBridge && mixamoBridge.isVisible) mixamoBridge.update();
-      timeline.invalidateSimulation();
-      updateSimulationStatusUI();
+      revertToPristineTPose();
       return;
     }
 

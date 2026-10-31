@@ -2621,6 +2621,11 @@
         </button>
       </div>
 
+      <!-- Quick Pristine T-Pose Button on Dashboard Header -->
+      <button class="btn" id="btn-header-reset-tpose" title="Revert Character to Pristine T-Pose at Frame 0 (Hotkey T)" style="padding: 4px 10px; font-size: 11px; font-weight: 700; color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.12); display: inline-flex; align-items: center; gap: 5px; border-radius: 4px; cursor: pointer;">
+        <span>🧘</span><span>T-Pose (T)</span>
+      </button>
+
       <button class="btn" id="btn-toggle-pose-mode" style="border-color: #a855f7; color: #d8b4fe; background: rgba(168, 85, 247, 0.1);" title="Toggle Active Pose Mode (P)">
         🎭 Pose Mode: OFF
       </button>
@@ -2979,12 +2984,15 @@
       <div class="panel-body" id="tab-content-inspector">
 
         <!-- Context Switcher: Selected Item vs Character Rig -->
-        <div class="inspector-context-switch">
-          <button id="subtab-btn-track" class="context-pill active" title="View &amp; edit selected timeline track, prop, or bone">
+        <div class="inspector-context-switch" style="display: flex; align-items: center; gap: 6px;">
+          <button id="subtab-btn-track" class="context-pill active" title="View &amp; edit selected timeline track, prop, or bone" style="flex: 1;">
             <span>⚡</span><span>Selected Item</span>
           </button>
-          <button id="subtab-btn-character" class="context-pill" title="Character balance, transform, and rig calibration">
+          <button id="subtab-btn-character" class="context-pill" title="Character balance, transform, and rig calibration" style="flex: 1;">
             <span>⚖️</span><span>Character &amp; Rig</span>
+          </button>
+          <button id="btn-quick-tpose-panel" class="btn" title="Revert Character to Pristine T-Pose at Frame 0 (Hotkey T)" style="padding: 4px 8px; font-size: 10px; font-weight: 700; color: #38bdf8; border-color: rgba(56, 189, 248, 0.35); background: rgba(56, 189, 248, 0.08); border-radius: 4px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;">
+            <span>🧘</span><span>T-Pose</span>
           </button>
         </div>
 
@@ -3395,6 +3403,9 @@
       </button>
       <button class="btn" id="btn-auto-key" title="Auto-Keyframe on bone manipulation" style="border-color: #64748b; color: #94a3b8; padding: 4px 8px; font-size: 10.5px;">
         ⏺️ Auto-Key: OFF
+      </button>
+      <button class="btn" id="btn-timeline-reset-tpose" title="Reset Character to Pristine T-Pose at Frame 0 (Hotkey T)" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; background: rgba(56, 189, 248, 0.08); padding: 4px 8px; font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+        🧘 T-Pose (T)
       </button>
 
       <div style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: #94a3b8;">
