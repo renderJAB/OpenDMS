@@ -144,6 +144,18 @@ export class AIStuntDirector {
     return Boolean(this.apiKey && this.apiKey.length > 10);
   }
 
+  async deleteGeneratedClip(clipId) {
+    if (this.motionClient && typeof this.motionClient.deleteClip === 'function') {
+      return await this.motionClient.deleteClip(clipId);
+    }
+  }
+
+  async clearAllGeneratedClips() {
+    if (this.motionClient && typeof this.motionClient.clearAllClips === 'function') {
+      return await this.motionClient.clearAllClips();
+    }
+  }
+
   /**
    * Process a natural language director prompt or @-tagged Text-to-Animation statement
    * @param {string} prompt - e.g. "@anim:FastWalk then spin kick in the air then @bhv:CatchFall"

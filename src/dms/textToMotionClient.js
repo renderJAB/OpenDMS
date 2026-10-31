@@ -82,6 +82,21 @@ export class AIMotionStorage {
       console.warn('IndexedDB deleteClip warning:', err);
     }
   }
+
+  static async clearAllClips() {
+    try {
+      const db = await this.openDB();
+      if (!db) return;
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).clear();
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (err) {
+      console.warn('IndexedDB clearAllClips warning:', err);
+    }
+  }
 }
 
 export class TextToMotionClient {
@@ -98,6 +113,18 @@ export class TextToMotionClient {
 
   async initCache() {
     this.cachedClips = await AIMotionStorage.getAllClips();
+    return this.cachedClips;
+  }
+
+  async deleteClip(clipId) {
+    await AIMotionStorage.deleteClip(clipId);
+    this.cachedClips = (this.cachedClips || []).filter(c => c.id !== clipId);
+    return this.cachedClips;
+  }
+
+  async clearAllClips() {
+    await AIMotionStorage.clearAllClips();
+    this.cachedClips = [];
     return this.cachedClips;
   }
 

@@ -3540,9 +3540,27 @@ function renderLayerInspector() {
       <div class="guide-card-desc" id="guide-card-desc">Hover over any setting above to inspect its exact biomechanical function and physical effect on the simulation.</div>
       <div class="guide-card-effect" id="guide-card-effect" style="display: none;"></div>
     </div>
+
+    <!-- Delete Layer Action -->
+    <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #1e293b;">
+      <button class="btn" id="btn-insp-delete-layer" style="width: 100%; justify-content: center; background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.45); color: #fca5a5; font-size: 11px; font-weight: 600;" title="Delete this clip/layer from timeline (Delete key)">
+        🗑️ Delete Track from Timeline
+      </button>
+    </div>
   `;
 
   // Bind Inspector Events
+  document.getElementById('btn-insp-delete-layer')?.addEventListener('click', () => {
+    historyManager.pushState(`Delete Layer: ${layer.name}`);
+    timeline.removeLayer(layer.id);
+    timeline.selectedLayerId = null;
+    timeline.invalidateSimulation();
+    renderTimelineLayers();
+    renderLayerInspector();
+    updateTimelineUI();
+    updateSimulationStatusUI();
+    showNotification(`Deleted track "${layer.name}" from timeline`, 'info');
+  });
   // Reactive Trigger & Mutual Grab Bindings
   const selTriggerType = document.getElementById('insp-trigger-type');
   if (selTriggerType) {
@@ -8389,6 +8407,24 @@ function setupUI() {
         return;
       }
 
+      // If viewing AI Generated clips and there are clips, show a management header bar
+      if (currentCategory === 'AI Generated' && filteredAI.length > 0) {
+        const topBar = document.createElement('div');
+        topBar.style.cssText = 'grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); border: 1px solid #1e293b; border-radius: 6px; padding: 6px 12px; margin-bottom: 2px;';
+        topBar.innerHTML = `
+          <span style="font-size: 11px; color: #94a3b8;">Saved AI Motions: <strong style="color: #f472b6;">${filteredAI.length}</strong></span>
+          <button id="btn-clear-all-ai-clips" style="background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.45); color: #fca5a5; border-radius: 4px; padding: 3px 8px; font-size: 10px; font-weight: 700; cursor: pointer;">🗑️ Clear All AI Clips</button>
+        `;
+        cardsGrid.appendChild(topBar);
+        topBar.querySelector('#btn-clear-all-ai-clips')?.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!confirm(`Are you sure you want to delete all ${filteredAI.length} saved AI motion clips? This cannot be undone.`)) return;
+          await aiDirector.clearAllGeneratedClips();
+          showNotification('Cleared all saved AI motion clips', 'info');
+          renderCards();
+        });
+      }
+
       // Render AI-Generated Motion Cards first
       filteredAI.forEach(clip => {
         const card = document.createElement('div');
@@ -8403,8 +8439,17 @@ function setupUI() {
           <div style="display: flex; gap: 4px; margin-top: auto;">
             <button class="btn-apply-ai-clip" style="flex: 1; padding: 4px 6px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; border-radius: 4px; font-size: 9.5px; font-weight: 600; cursor: pointer;">Apply</button>
             <button class="btn-dl-ai-bvh" title="Download .BVH file" style="padding: 4px 7px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 4px; font-size: 9.5px; font-weight: 700; cursor: pointer;">💾 .BVH</button>
+            <button class="btn-del-ai-clip" title="Delete AI clip from saved library" style="padding: 4px 7px; background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.45); color: #fca5a5; border-radius: 4px; font-size: 9.5px; font-weight: 700; cursor: pointer;">🗑️</button>
           </div>
         `;
+
+        card.querySelector('.btn-del-ai-clip')?.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!confirm(`Delete AI motion clip "${clip.name}" from your library?`)) return;
+          await aiDirector.deleteGeneratedClip(clip.id);
+          showNotification(`Deleted AI clip "${clip.name}"`, 'info');
+          renderCards();
+        });
 
         card.querySelector('.btn-apply-ai-clip')?.addEventListener('click', async (e) => {
           e.stopPropagation();
@@ -9325,7 +9370,7 @@ function setupUI() {
 
         if (result.generatedClips && result.generatedClips.length > 0) {
           const actionsRow = document.createElement('div');
-          actionsRow.style.cssText = 'display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 6px; border-top: 1px solid #1e293b;';
+          actionsRow.style.cssText = 'display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 6px; border-top: 1px solid #1e293b; align-items: center;';
           result.generatedClips.forEach(clip => {
             const btnDl = document.createElement('button');
             btnDl.style.cssText = 'background: rgba(236, 72, 153, 0.14); border: 1px solid #ec4899; color: #f472b6; border-radius: 4px; padding: 3px 8px; font-size: 10px; font-weight: 700; cursor: pointer;';
@@ -9336,7 +9381,25 @@ function setupUI() {
                 showNotification(`Downloaded ${clip.tagSlug}.bvh`, 'info');
               }
             });
+
+            const btnDel = document.createElement('button');
+            btnDel.style.cssText = 'background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.45); color: #fca5a5; border-radius: 4px; padding: 3px 8px; font-size: 10px; font-weight: 600; cursor: pointer;';
+            btnDel.textContent = '🗑️ Delete Clip';
+            btnDel.title = 'Remove this clip from your saved library';
+            btnDel.addEventListener('click', async () => {
+              if (confirm(`Delete "${clip.name}" from saved AI clips?`)) {
+                await aiDirector.deleteGeneratedClip(clip.id);
+                btnDl.style.display = 'none';
+                btnDel.textContent = '✓ Deleted';
+                btnDel.disabled = true;
+                btnDel.style.borderColor = '#64748b';
+                btnDel.style.color = '#94a3b8';
+                showNotification(`Removed "${clip.name}" from saved library`, 'info');
+              }
+            });
+
             actionsRow.appendChild(btnDl);
+            actionsRow.appendChild(btnDel);
           });
           thinkingMsg.appendChild(actionsRow);
         }
