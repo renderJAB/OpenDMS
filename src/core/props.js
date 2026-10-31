@@ -317,6 +317,14 @@ export class PropsManager {
         }
 
         const shape = physics.createShape(physxGeo, material);
+        if (PhysX.PxShapeFlagEnum) {
+          shape.setFlag(PhysX.PxShapeFlagEnum.eSIMULATION_SHAPE, true);
+          shape.setFlag(PhysX.PxShapeFlagEnum.eSCENE_QUERY_SHAPE, true);
+        }
+        if (typeof shape.setContactOffset === 'function') shape.setContactOffset(0.02);
+        if (typeof shape.setRestOffset === 'function') shape.setRestOffset(0.0);
+        const propFilterData = new PhysX.PxFilterData(0xFFFF, 0xFFFF, 0, 0);
+        shape.setSimulationFilterData(propFilterData);
         const pose = new PhysX.PxTransform(
           new PhysX.PxVec3(pos.x, pos.y, pos.z),
           new PhysX.PxQuat(0, 0, 0, 1)

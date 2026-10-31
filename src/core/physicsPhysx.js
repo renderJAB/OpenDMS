@@ -78,12 +78,41 @@ export async function initPhysxPhysics() {
   const filterShaderFn = PhysX.DefaultFilterShader || PhysX.PxTopLevelFunctions?.DefaultFilterShader || PhysX.PxTopLevelFunctions?.prototype?.DefaultFilterShader;
   sceneDesc.filterShader = filterShaderFn();
 
+  try {
+    if (sceneDesc.flags?.raise && PhysX.PxSceneFlagEnum) {
+      if (PhysX.PxSceneFlagEnum.eENABLE_PCM !== undefined) {
+        sceneDesc.flags.raise(PhysX.PxSceneFlagEnum.eENABLE_PCM);
+      }
+      if (PhysX.PxSceneFlagEnum.eENABLE_STABILIZATION !== undefined) {
+        sceneDesc.flags.raise(PhysX.PxSceneFlagEnum.eENABLE_STABILIZATION);
+      }
+      if (PhysX.PxSceneFlagEnum.eENABLE_CCD !== undefined) {
+        sceneDesc.flags.raise(PhysX.PxSceneFlagEnum.eENABLE_CCD);
+      }
+    }
+  } catch (flagErr) {
+    console.warn('[PhysX 5] Scene flags setup note:', flagErr);
+  }
+
   currentScene = currentPhysics.createScene(sceneDesc);
 
-  // Ground plane box: 50m x 0.5m x 50m centered at y = -0.5
-  const groundGeo = new PhysX.PxBoxGeometry(50, 0.5, 50);
+  // Ground plane: 100m x 2.0m x 100m centered at y = -1.0 (top surface strictly at y = 0.0)
+  const groundGeo = new PhysX.PxBoxGeometry(50.0, 1.0, 50.0);
   const groundShape = currentPhysics.createShape(groundGeo, currentDefaultMaterial);
-  const groundPose = new PhysX.PxTransform(new PhysX.PxVec3(0, -0.5, 0), new PhysX.PxQuat(0, 0, 0, 1));
+  
+  if (PhysX.PxShapeFlagEnum) {
+    groundShape.setFlag(PhysX.PxShapeFlagEnum.eSIMULATION_SHAPE, true);
+    groundShape.setFlag(PhysX.PxShapeFlagEnum.eSCENE_QUERY_SHAPE, true);
+  }
+  if (typeof groundShape.setContactOffset === 'function') groundShape.setContactOffset(0.02);
+  if (typeof groundShape.setRestOffset === 'function') groundShape.setRestOffset(0.0);
+
+  // CRITICAL: PhysX DefaultFilterShader evaluates: (filterData0.w0 & filterData1.w1) && (filterData1.w0 & filterData0.w1)
+  // Without non-zero filterData on both ground & character shapes, collisions are suppressed!
+  const groundFilterData = new PhysX.PxFilterData(0xFFFF, 0xFFFF, 0, 0);
+  groundShape.setSimulationFilterData(groundFilterData);
+
+  const groundPose = new PhysX.PxTransform(new PhysX.PxVec3(0, -1.0, 0), new PhysX.PxQuat(0, 0, 0, 1));
   currentFloorActor = currentPhysics.createRigidStatic(groundPose);
   currentFloorActor.attachShape(groundShape);
   currentScene.addActor(currentFloorActor);

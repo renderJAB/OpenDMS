@@ -2605,6 +2605,7 @@
           <option value="jolt">Jolt Physics</option>
           <option value="physx">NVIDIA PhysX 5</option>
         </select>
+        <button id="btn-physics-engine-info" title="Physics Engines Guide (Rapier vs MuJoCo vs Jolt vs PhysX 5)" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; border-radius: 4px; width: 22px; height: 24px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; line-height: 1;">ℹ</button>
       </div>
 
       <!-- 3D Transform Mode Switcher (W: Translate, E: Rotate, R: Scale) -->
@@ -3607,6 +3608,93 @@
             🦶 Ankle Trip &amp; Dive Roll
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-Physics Engines Comparison Guide Modal -->
+  <div id="modal-physics-engines" class="modal-overlay" style="display: none; z-index: 10060;">
+    <div class="modal-card" style="width: 760px; max-width: 95vw; max-height: 88vh; background: #0f172a; border: 1px solid #38bdf8; box-shadow: 0 25px 50px rgba(0,0,0,0.85); display: flex; flex-direction: column;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">⚡</span>
+          <div>
+            <strong style="color: #f8fafc; font-size: 14px;">OpenDMS Multi-Physics Engines Comparison Guide</strong>
+            <div style="font-size: 11px; color: #94a3b8;">How each real-time WASM physics solver differs in feel, stability, and biomechanics</div>
+          </div>
+        </div>
+        <button id="btn-close-physics-modal" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; padding: 4px 8px;">&times;</button>
+      </div>
+
+      <div style="overflow-y: auto; padding: 14px 2px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px;">
+        <!-- Rapier 3D -->
+        <div style="background: #090e1a; border: 1px solid #334155; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <strong style="color: #38bdf8; font-size: 13px;">🦀 Rapier 3D (Default)</strong>
+            <span style="font-size: 9.5px; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 3px; padding: 1px 6px; font-weight: 700;">FASTEST &amp; LIGHTWEIGHT</span>
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.45;">
+            Rust-based WASM solver using Projected Gauss-Seidel (PGS) with Featherstone articulated dynamics.
+          </div>
+          <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.5;">
+            <div>&bull; <strong style="color: #e2e8f0;">Best for:</strong> Real-time authoring, rapid iterations, interactive stunts, and web performance.</div>
+            <div>&bull; <strong style="color: #e2e8f0;">Key Strengths:</strong> Instant initialization, zero setup latency, sharp joint limits, rock-solid active pose tracking.</div>
+            <div>&bull; <strong style="color: #e2e8f0;">Motion Character:</strong> Snappy, agile character response, ideal for live scrubbing and prompt stunt tuning.</div>
+          </div>
+        </div>
+
+        <!-- MuJoCo WASM -->
+        <div style="background: #090e1a; border: 1px solid #334155; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <strong style="color: #a78bfa; font-size: 13px;">🔬 MuJoCo WASM</strong>
+            <span style="font-size: 9.5px; background: rgba(167, 139, 250, 0.15); color: #c4b5fd; border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 3px; padding: 1px 6px; font-weight: 700;">BIOMECHANICS RESEARCH</span>
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.45;">
+            Google DeepMind's robotics &amp; biomechanics engine using continuous-constraint convex optimization.
+          </div>
+          <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.5;">
+            <div>&bull; <strong style="color: #e2e8f0;">Best for:</strong> Accurate muscle compliance, joint damping, and natural anatomical weight distribution.</div>
+            <div>&bull; <strong style="color: #e2e8f0;">Key Strengths:</strong> True Articulated Body Algorithm (ABA), zero joint drift, realistic contact impulses.</div>
+            <div>&bull; <strong style="color: #e2e8f0;">Motion Character:</strong> Heavy, organic biomechanical momentum with smooth recovery from stumbling.</div>
+          </div>
+        </div>
+
+        <!-- Jolt Physics -->
+        <div style="background: #090e1a; border: 1px solid #334155; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <strong style="color: #34d399; font-size: 13px;">⚡ Jolt Physics</strong>
+            <span style="font-size: 9.5px; background: rgba(52, 211, 153, 0.15); color: #6ee7b7; border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 3px; padding: 1px 6px; font-weight: 700;">AAA GAME ENGINE</span>
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.45;">
+            Modern multi-threaded C++ physics engine developed by Jorrit Rouwe, used in Horizon Forbidden West.
+          </div>
+          <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.5;">
+            <div>&bull; <strong style="color: #e2e8f0;">Best for:</strong> High-speed impacts, heavy ragdoll collisions, multi-actor martial arts, and props destruction.</div>
+            <div>&bull; <strong style="color: #e2e8f0;">Key Strengths:</strong> Extreme numerical stability under high forces, GroupFilterTable limb isolation.</div>
+            <div>&bull; <strong style="color: #e2e8f0;">Motion Character:</strong> Punchy, weighty ragdoll impacts with clean separation between limbs.</div>
+          </div>
+        </div>
+
+        <!-- NVIDIA PhysX 5 -->
+        <div style="background: #090e1a; border: 1px solid #334155; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <strong style="color: #22c55e; font-size: 13px;">🎬 NVIDIA PhysX 5</strong>
+            <span style="font-size: 9.5px; background: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 3px; padding: 1px 6px; font-weight: 700;">CINEMATIC VFX &amp; STUNTS</span>
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.45;">
+            Industry-standard studio physics engine with Temporal Gauss-Seidel (TGS) solver and PCM contacts.
+          </div>
+          <div style="font-size: 10.5px; color: #94a3b8; line-height: 1.5;">
+            <div>&bull; <strong style="color: #e2e8f0;">Best for:</strong> Hollywood stunt physics, full-contact falls, high-friction ground stiction, and tumbling.</div>
+            <div>&bull; <strong style="color: #e2e8f0;">Key Strengths:</strong> Continuous Collision Detection (CCD) prevents floor tunneling, D6 joint motor compliance.</div>
+            <div>&bull; <strong style="color: #e2e8f0;">Motion Character:</strong> Realistic ground rolling, authentic body stiction on contact, and visceral crash tumbling.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid #1e293b; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b;">
+        <span>💡 Switch active engine anytime via the header dropdown or test presets with different solvers.</span>
+        <button id="btn-close-physics-modal-ok" class="btn btn-primary" style="padding: 4px 14px; font-size: 11px;">Got it</button>
       </div>
     </div>
   </div>

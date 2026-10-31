@@ -7290,6 +7290,14 @@ function setupUI() {
     renderSceneOutliner();
     updateModelUI();
     updateSimulationStatusUI();
+    
+    const ENGINE_INFOS = {
+      rapier: '🦀 Rapier 3D Active: Ultra-fast Rust solver, ideal for responsive authoring & live playback.',
+      mujoco: '🔬 MuJoCo WASM Active: DeepMind robotics solver with true articulated compliance & momentum.',
+      jolt: '⚡ Jolt Physics Active: AAA game engine solver with extreme impact stability & clean limb separation.',
+      physx: '🎬 NVIDIA PhysX 5 Active: Studio VFX solver with CCD anti-tunneling, TGS compliance & ground stiction.'
+    };
+    showNotification(ENGINE_INFOS[engineType] || `Switched to ${engineType}`, 'info');
     console.log(`Successfully switched physics engine to ${engineType}!`);
   }
 
@@ -7297,6 +7305,36 @@ function setupUI() {
   if (physicsEngineSelect) {
     physicsEngineSelect.addEventListener('change', async (e) => {
       await switchPhysicsEngine(e.target.value);
+    });
+  }
+
+  // Physics Engines Comparison Modal Controls
+  const btnPhysicsInfo = document.getElementById('btn-physics-engine-info');
+  const modalPhysics = document.getElementById('modal-physics-engines');
+  const btnClosePhysics = document.getElementById('btn-close-physics-modal');
+  const btnClosePhysicsOk = document.getElementById('btn-close-physics-modal-ok');
+
+  if (btnPhysicsInfo && modalPhysics) {
+    btnPhysicsInfo.addEventListener('click', (e) => {
+      e.preventDefault();
+      modalPhysics.style.display = 'flex';
+    });
+  }
+  if (btnClosePhysics && modalPhysics) {
+    btnClosePhysics.addEventListener('click', () => {
+      modalPhysics.style.display = 'none';
+    });
+  }
+  if (btnClosePhysicsOk && modalPhysics) {
+    btnClosePhysicsOk.addEventListener('click', () => {
+      modalPhysics.style.display = 'none';
+    });
+  }
+  if (modalPhysics) {
+    modalPhysics.addEventListener('click', (e) => {
+      if (e.target === modalPhysics) {
+        modalPhysics.style.display = 'none';
+      }
     });
   }
 

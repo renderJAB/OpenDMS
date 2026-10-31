@@ -183,6 +183,17 @@ export class PhysXCharacter {
       }
 
       const shape = this.physics.createShape(physxGeo, this.material);
+      if (PhysX.PxShapeFlagEnum) {
+        shape.setFlag(PhysX.PxShapeFlagEnum.eSIMULATION_SHAPE, true);
+        shape.setFlag(PhysX.PxShapeFlagEnum.eSCENE_QUERY_SHAPE, true);
+      }
+      if (typeof shape.setContactOffset === 'function') shape.setContactOffset(0.02);
+      if (typeof shape.setRestOffset === 'function') shape.setRestOffset(0.0);
+
+      // CRITICAL: Filter data must match ground shape (word0 & word1) so DefaultFilterShader enables contacts!
+      const charFilterData = new PhysX.PxFilterData(0xFFFF, 0xFFFF, 0, 0);
+      shape.setSimulationFilterData(charFilterData);
+
       if (seg.type === 'capsule') {
         shape.setLocalPose(new PhysX.PxTransform(
           new PhysX.PxVec3(0, 0, 0),
@@ -206,6 +217,10 @@ export class PhysXCharacter {
       }
       actor.setLinearDamping(0.04);
       actor.setAngularDamping(0.35);
+
+      if (PhysX.PxRigidBodyFlagEnum?.eENABLE_CCD !== undefined) {
+        actor.setRigidBodyFlag(PhysX.PxRigidBodyFlagEnum.eENABLE_CCD, true);
+      }
 
       // Default to kinematic until simulation / ragdoll activates
       actor.setRigidBodyFlag(PhysX.PxRigidBodyFlagEnum.eKINEMATIC, true);
@@ -796,6 +811,46 @@ export class PhysXCharacter {
     }
   }
 
+  enforceGroundContactSafety() {
+    const PhysX = this.physx;
+    // Guard feet from ever sinking through floor plane (y = 0)
+    for (const footName of ['LeftFoot', 'RightFoot']) {
+      const b = this.bodies[footName];
+      if (!b || !b.actor) continue;
+      const pose = b.actor.getGlobalPose();
+      // Foot box has half-height 0.03, so center must stay >= 0.03 for sole to stay at or above y = 0
+      const minFootY = 0.03;
+      if (pose.p.y < minFootY) {
+        b.actor.setGlobalPose(new PhysX.PxTransform(
+          new PhysX.PxVec3(pose.p.x, minFootY, pose.p.z),
+          pose.q
+        ), true);
+        const v = b.actor.getLinearVelocity();
+        if (v.y < 0) {
+          b.actor.setLinearVelocity(new PhysX.PxVec3(v.x, 0, v.z), true);
+        }
+      }
+    }
+
+    // General safeguard for all other body parts (pelvis, spine, limbs)
+    for (const [name, b] of Object.entries(this.bodies)) {
+      if (name === 'LeftFoot' || name === 'RightFoot') continue;
+      if (!b || !b.actor) continue;
+      const pose = b.actor.getGlobalPose();
+      const minBodyY = Math.max(0.04, (b.radius || 0.05));
+      if (pose.p.y < minBodyY) {
+        b.actor.setGlobalPose(new PhysX.PxTransform(
+          new PhysX.PxVec3(pose.p.x, minBodyY, pose.p.z),
+          pose.q
+        ), true);
+        const v = b.actor.getLinearVelocity();
+        if (v.y < 0) {
+          b.actor.setLinearVelocity(new PhysX.PxVec3(v.x, 0, v.z), true);
+        }
+      }
+    }
+  }
+
   update(dt) {
     if (this.impactShockTimer > 0) {
       this.impactShockTimer = Math.max(0, this.impactShockTimer - dt);
@@ -809,6 +864,7 @@ export class PhysXCharacter {
         this.applyMotorTorques(dt);
       }
       this.enforceAnatomicalLimits(dt);
+      this.enforceGroundContactSafety();
     }
 
     // Sync visual meshes from PhysX actors
