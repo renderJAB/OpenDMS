@@ -557,8 +557,8 @@ export class JoltCharacter {
       return;
     }
 
-    const baseStiff = Math.max(20.0, this.muscleStiffness * 0.65);
-    const baseDamp = Math.max(6.0, this.muscleDamping * 0.55);
+    const baseStiff = this.muscleStiffness > 1.0 ? Math.max(2.0, this.muscleStiffness * 0.70) : 0.0;
+    const baseDamp = this.muscleDamping > 0.5 ? Math.max(1.0, this.muscleDamping * 0.60) : 0.5;
 
     for (const j of this.joints) {
       let weight = 1.0;

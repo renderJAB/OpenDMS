@@ -1663,20 +1663,64 @@ export class TimelineEngine {
         // Base Timeline State (No explicit behavior or animation tracks)
         const animLayers = this.layers.filter(l => l.enabled && l.type === 'ANIMATION' && (l.actorId || 'actor-1') === actorId);
         const pastAnim = animLayers.filter(l => l.endFrame <= f).sort((a, b) => b.endFrame - a.endFrame)[0];
-        const isPastAnimActiveHold = pastAnim && (pastAnim.simTakeoverMode || 'active_hold') === 'active_hold';
+        const takeoverMode = pastAnim?.simTakeoverMode || 'active_hold';
+        const stiffMultiplier = pastAnim?.takeoverStiffness ?? 1.0;
 
-        if (isPastAnimActiveHold && baseRotations) {
-          // Simulation Takeover: Carry momentum with active motorized pose hold from the cut frame
+        if (pastAnim && takeoverMode === 'ragdoll') {
+          // 1. RAGDOLL TAKEOVER: Zero muscle stiffness, limp gravitational release
+          char.isPureRagdoll = true;
+          char.muscleStiffness = 0.0;
+          char.muscleDamping = 10.0;
+          char.allowGroundActiveMotor = false;
+        } else if (pastAnim && takeoverMode === 'blend_out') {
+          // 2. BLEND-OUT TAKEOVER: Smooth progressive crossfade into relaxed ragdoll over blendOut frames
+          const elapsed = f - pastAnim.endFrame;
+          const blendFrames = Math.max(1, pastAnim.blendOut || 12);
+          const progress = Math.min(1.0, elapsed / blendFrames);
+          const fadeWeight = 1.0 - progress;
+
+          if (fadeWeight > 0.02) {
+            char.isPureRagdoll = false;
+            char.muscleStiffness = 320.0 * stiffMultiplier * fadeWeight;
+            char.muscleDamping = 35.0 * Math.max(0.2, fadeWeight);
+            char.allowGroundActiveMotor = stiffMultiplier >= 0.7;
+            if (char.joints && baseRotations) {
+              for (const j of char.joints) {
+                const rot = baseRotations[j.childName] || NATURAL_STANCE_ROTATIONS[j.childName] || [0, 0, 0];
+                j.targetAngle.x = rot[0];
+                j.targetAngle.y = rot[1];
+                j.targetAngle.z = rot[2];
+              }
+            }
+          } else {
+            char.isPureRagdoll = true;
+            char.muscleStiffness = 0.0;
+            char.allowGroundActiveMotor = false;
+          }
+        } else if (pastAnim && (takeoverMode === 'active_hold' || takeoverMode === 'freeze') && baseRotations) {
+          // 3. ACTIVE HOLD / FREEZE TAKEOVER: Motorized pose hold with user-controlled stiffness
           char.isPureRagdoll = false;
-          const stiffMult = pastAnim.takeoverStiffness ?? 1.0;
-          char.muscleStiffness = 220.0 * stiffMult;
-          char.muscleDamping = 28.0;
+          char.muscleStiffness = 320.0 * stiffMultiplier;
+          char.muscleDamping = 35.0 * Math.sqrt(Math.max(0.05, stiffMultiplier));
+          char.allowGroundActiveMotor = stiffMultiplier >= 0.7;
+
           if (char.joints) {
             for (const j of char.joints) {
               const rot = baseRotations[j.childName] || NATURAL_STANCE_ROTATIONS[j.childName] || [0, 0, 0];
               j.targetAngle.x = rot[0];
               j.targetAngle.y = rot[1];
               j.targetAngle.z = rot[2];
+            }
+          }
+
+          // If high stiffness is selected (>= 70%), support pelvis height so the legs don't collapse into a heap under gravity
+          const pelvis = char.bodies['Pelvis'];
+          if (pelvis && pelvis.rigidBody && stiffMultiplier >= 0.7) {
+            const pTr = pelvis.rigidBody.translation();
+            const pVel = pelvis.rigidBody.linvel ? pelvis.rigidBody.linvel() : { x: 0, y: 0, z: 0 };
+            if (pTr.y < 0.94 && pTr.y > 0.35 && (pVel.y || 0) < 0.2) {
+              const supForce = (0.94 - pTr.y) * 2200.0 * stiffMultiplier * dt;
+              pelvis.rigidBody.applyImpulse({ x: 0, y: Math.min(supForce, 38.0), z: 0 }, true);
             }
           }
         } else if (char.balanceControlEnabled) {
@@ -1694,6 +1738,8 @@ export class TimelineEngine {
           }
         } else {
           char.isPureRagdoll = true;
+          char.muscleStiffness = 0.0;
+          char.allowGroundActiveMotor = false;
         }
       } else {
         char.isPureRagdoll = false;

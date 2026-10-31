@@ -1296,8 +1296,8 @@ export class BiomechanicalCharacter {
 
     // Endorphin 2.7.1 effector stiffness/damping weights:
     // LowerBack & Hips carry high strength (1.25x), Knees/Ankles (1.1x), Shoulders/Arms (1.15x for active flailing/reach)
-    const baseStiff = Math.max(12.0, this.muscleStiffness * 0.70 * shockScale);
-    const baseDamp = Math.max(4.0, this.muscleDamping * 0.60 * shockScale);
+    const baseStiff = this.muscleStiffness > 1.0 ? Math.max(2.0, this.muscleStiffness * 0.75 * shockScale) : 0.0;
+    const baseDamp = this.muscleDamping > 0.5 ? Math.max(1.0, this.muscleDamping * 0.60 * shockScale) : 0.5;
 
     for (const j of this.joints) {
       const h = j.joint.handle;

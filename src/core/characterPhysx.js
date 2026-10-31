@@ -560,7 +560,7 @@ export class PhysXCharacter {
         ? 0.22 + 0.78 * Math.pow(1.0 - Math.min(1.0, this.impactShockTimer / 0.26), 2)
         : 1.0;
 
-      const kp = (j.stiffness || 120) * (this.muscleStiffness / 300.0) * 0.45 * shockScale;
+      const kp = this.muscleStiffness > 1.0 ? (j.stiffness || 120) * (this.muscleStiffness / 300.0) * 0.45 * shockScale : 0.0;
       const kd = (j.damping || 14) * (this.muscleDamping / 35.0) * 0.25 * shockScale;
       const localErr = new THREE.Vector3(errQuat.x * 2.0, errQuat.y * 2.0, errQuat.z * 2.0).applyQuaternion(pQuat);
 

@@ -586,7 +586,7 @@ export class MuJoCoCharacter {
       return;
     }
 
-    const baseStiff = Math.max(20.0, this.muscleStiffness * 0.65);
+    const baseStiff = this.muscleStiffness > 1.0 ? Math.max(2.0, this.muscleStiffness * 0.70) : 0.0;
 
     for (const j of this.joints) {
       let weight = 1.0;
