@@ -459,7 +459,11 @@ async function init() {
   initViewportBonePicking();
   initPoseControls();
 
-  character.resetToTPose();
+  if (character.balanceControlEnabled && typeof character.resetToNaturalStance === 'function') {
+    character.resetToNaturalStance();
+  } else {
+    character.resetToTPose();
+  }
 
   setupUI();
   renderTimelineRuler();
@@ -1398,7 +1402,11 @@ function applyStagingPreset(presetName) {
 
   character.setSpawnOffset(a1Pos.x, a1Pos.y, a1Pos.z);
   character.spawnYaw = a1Yaw;
-  character.resetToTPose();
+  if (character.balanceControlEnabled && typeof character.resetToNaturalStance === 'function') {
+    character.resetToNaturalStance();
+  } else {
+    character.resetToTPose();
+  }
   setCharacterSpawnPosition(a1Pos.x, a1Pos.y, a1Pos.z, false);
 
   if (actor2Character && actor2Character.setSpawnTransform) {
@@ -5576,9 +5584,9 @@ function renderTimelineLayers() {
   if (timeline.layers.length === 0) {
     container.innerHTML = `
       <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; background: rgba(15, 23, 42, 0.4); border-radius: 6px; margin: 8px;">
-        <span style="font-size: 18px; display: block; margin-bottom: 4px;">🍂</span>
-        <em>Empty Timeline (Endorphin Base State): Character simulates as a pure <strong>Passive Biomechanical Ragdoll</strong>.<br>
-        Click <strong>"▶ Simulate &amp; Play"</strong> to drop naturally from T-Pose, or add Behaviours, Animations, or Force Events.</em>
+        <span style="font-size: 18px; display: block; margin-bottom: 4px;">⚖️</span>
+        <em>Timeline Canvas: Character maintains <strong>Active Standing Balance</strong>.<br>
+        Click <strong>"▶ Simulate &amp; Play"</strong> to test, or click <strong>"Push Front (45N)"</strong> to see Boston Dynamics auto-balance push recovery!</em>
       </div>
     `;
     return;
@@ -7479,7 +7487,11 @@ function setupUI() {
     timeline.isBakingLive = false;
     timeline.isPlaying = false;
     timeline.seek(0);
+    if (character.balanceControlEnabled && typeof character.resetToNaturalStance === 'function') {
+    character.resetToNaturalStance();
+  } else {
     character.resetToTPose();
+  }
     if (mixamoBridge && mixamoBridge.isVisible) mixamoBridge.update();
     renderTimelineLayers();
     renderLayerInspector();
@@ -9074,9 +9086,15 @@ function setupUI() {
     const executeTestShove = (dir, forceMagnitude) => {
       if (!character) return;
 
+      character.balanceControlEnabled = true;
+      if (actor2Character) actor2Character.balanceControlEnabled = true;
+      const chkAutoBalance = document.getElementById('chk-auto-balance');
+      if (chkAutoBalance) chkAutoBalance.checked = true;
+
+      // Allow 15 frames (~0.25s) for standing foot contact to establish if triggered at frame 0
       const f = timeline.currentFrame;
-      const startF = Math.max(0, f);
-      const endF = Math.min(timeline.totalFrames - 1, startF + 14);
+      const startF = f > 0 ? f : 15;
+      const endF = Math.min(timeline.totalFrames - 1, startF + 12);
       const yaw = dir === 'front' ? 180 : 0;
 
       // Upsert test perturbation layer

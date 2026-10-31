@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { SKELETON_TREE } from '../core/character.js';
+import { SKELETON_TREE, NATURAL_STANCE_ROTATIONS } from '../core/character.js';
 
 export class TimelineEngine {
   constructor(character, dmsEngine) {
@@ -734,8 +734,13 @@ export class TimelineEngine {
       : [{ character: this.character, dmsEngine: this.dmsEngine }];
     for (const a of actors) {
       if (a.character) {
-        a.character.resetToTPose();
+        if (a.character.balanceControlEnabled && typeof a.character.resetToNaturalStance === 'function') {
+          a.character.resetToNaturalStance();
+        } else {
+          a.character.resetToTPose();
+        }
         if (a.character.sensors) a.character.sensors.reset();
+        if (a.character.dynamicBalance) a.character.dynamicBalance.reset();
       }
       if (a.dmsEngine) a.dmsEngine.reset();
     }
@@ -1636,7 +1641,32 @@ export class TimelineEngine {
       }
 
       const ragdollWeight = dms.behaviorWeights['ragdoll'] || 0;
-      char.isPureRagdoll = ragdollWeight > 0.5 || (totalActiveBehaviorWeight < 0.01 && animWeight < 0.01);
+      const isExplicitRagdoll = ragdollWeight > 0.5;
+      const hasActiveTracks = (totalActiveBehaviorWeight >= 0.01 || animWeight >= 0.01);
+
+      if (isExplicitRagdoll) {
+        char.isPureRagdoll = true;
+      } else if (!hasActiveTracks) {
+        // Base Timeline State (No explicit behavior or animation tracks)
+        if (char.balanceControlEnabled) {
+          // Autonomous Active Dynamic Balance (Boston Dynamics Standing Equilibrium)
+          char.isPureRagdoll = false;
+          char.muscleStiffness = 300.0;
+          char.muscleDamping = 35.0;
+          if (char.joints) {
+            for (const j of char.joints) {
+              const defRot = NATURAL_STANCE_ROTATIONS[j.childName] || [0, 0, 0];
+              j.targetAngle.x = defRot[0];
+              j.targetAngle.y = defRot[1];
+              j.targetAngle.z = defRot[2];
+            }
+          }
+        } else {
+          char.isPureRagdoll = true;
+        }
+      } else {
+        char.isPureRagdoll = false;
+      }
 
       // Constraint Limb Compliance & Kinematic Anchor Management
       const activeConstrainedBones = new Set();
