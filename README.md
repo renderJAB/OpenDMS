@@ -1,7 +1,7 @@
 # OpenDMS Studio
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Support on Gumroad](https://img.shields.io/badge/Support_on-Gumroad-ff90e8?logo=gumroad&logoColor=black)](https://renderjab.gumroad.com/l/opendms)
+[![Support on Gumroad](https://img.shields.io/badge/Support_on-Gumroad-ff90e8?logo=gumroad&logoColor=black)](https://renderjab.gumroad.com/l/OpeDMS)
 [![Three.js](https://img.shields.io/badge/Render-Three.js_r170-black?logo=three.js)](https://threejs.org/)
 [![WebAssembly](https://img.shields.io/badge/Physics-WASM_Multi--Engine-654ff0?logo=webassembly)](https://webassembly.org/)
 
@@ -109,7 +109,9 @@ OpenDMS is a free, 100% open-source software project built to bring modern, acce
 
 If OpenDMS saves you time or empowers your creative pipeline, please consider supporting continued development:
 
-[![Support on Gumroad](https://img.shields.io/badge/Support_on-Gumroad-ff90e8?style=for-the-badge&logo=gumroad&logoColor=black)](https://renderjab.gumroad.com/l/opendms)
+[![Support on Gumroad](https://img.shields.io/badge/Support_on-Gumroad-ff90e8?style=for-the-badge&logo=gumroad&logoColor=black)](https://renderjab.gumroad.com/l/OpeDMS)
+
+**[👉 Download Ready-to-Run Windows Release & Support on Gumroad](https://renderjab.gumroad.com/l/OpeDMS)**
 
 ### Where Contributions Go:
 * 🚀 **Physics Expansion**: Implementing Cascadeur-inspired ballistic flight arcs and fulcrum friction points.
