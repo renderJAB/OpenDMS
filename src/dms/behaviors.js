@@ -158,6 +158,15 @@ export const BEHAVIOR_DEFINITIONS = {
     defaultDuration: 120,
     desc: 'Biomechanical impact flinch, head snap back, and staggering recoil response from physical hit.'
   },
+  flail: {
+    id: 'flail',
+    name: 'Mid-Air Flail & Stumble',
+    category: 'protective',
+    color: '#f59e0b',
+    icon: '⚡',
+    defaultDuration: 120,
+    desc: 'Rapid reactionary limb waving and stumble stepping to recover orientation and decelerate fall.'
+  },
 
   // 🏃 Locomotion & Equilibrium
   idleStance: {
@@ -1734,6 +1743,29 @@ export class DMSBehaviorEngine {
       }
       if (j.name.includes('Thigh_to_') && j.name.includes('Calf')) {
         return new THREE.Vector3(0.45 * int, 0, 0);
+      }
+      return null;
+    }
+
+    // 11f. DYNAMIC FLAIL (Reactionary Mid-Air & Stumble Flailing Reflex)
+    if (bKey === 'flail') {
+      const flailPhase = time * 11.0 * speed;
+      const w1 = Math.sin(flailPhase) * int;
+      const w2 = Math.cos(flailPhase) * int;
+      if (j.name.includes('UpperArm')) {
+        return new THREE.Vector3(w1 * 0.85, (isLeft ? 0.25 : -0.25) * int, (isLeft ? -0.85 : 0.85) * int + w2 * 0.4);
+      }
+      if (j.name.includes('Forearm')) {
+        return new THREE.Vector3(0.55 * int + Math.abs(w1) * 0.35, 0, 0);
+      }
+      if (j.name.includes('Thigh')) {
+        return new THREE.Vector3((isLeft ? w1 : -w1) * 0.55, 0, 0);
+      }
+      if (j.name.includes('Calf')) {
+        return new THREE.Vector3(Math.max(0.12, (isLeft ? -w2 : w2) * 0.6), 0, 0);
+      }
+      if (j.name.includes('Spine')) {
+        return new THREE.Vector3(w1 * 0.15, 0, w2 * 0.15);
       }
       return null;
     }

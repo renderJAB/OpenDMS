@@ -7534,7 +7534,7 @@ function setupUI() {
         name: 'Walk Animation (Human Gait)',
         type: 'ANIMATION',
         startFrame: 0,
-        endFrame: 60,
+        endFrame: 30,
         animType: 'walk',
         gaitStyle: 'walk',
         intensity: 1.0,
@@ -7546,15 +7546,15 @@ function setupUI() {
         id: 'layer_trip',
         name: 'Snag Trip on LeftCalf',
         type: 'PERTURBATION',
-        startFrame: 60,
-        endFrame: 68,
+        startFrame: 30,
+        endFrame: 36,
         targetBody: 'LeftCalf',
-        magnitude: 70.0,
+        magnitude: 55.0,
         yawDeg: 180.0,
         pitchDeg: 12.0,
         forceMode: 'impulse',
         intensity: 1.0,
-        impulse: TimelineEngine.computeForceVector(70.0, 180.0, 12.0),
+        impulse: TimelineEngine.computeForceVector(55.0, 180.0, 12.0),
         enabled: true,
         color: '#dc2626'
       },
@@ -7562,8 +7562,8 @@ function setupUI() {
         id: 'layer_catchfall',
         name: 'Catch Fall (Hands Out)',
         type: 'BEHAVIOR',
-        startFrame: 60,
-        endFrame: 140,
+        startFrame: 30,
+        endFrame: 75,
         behavior: 'catchFall',
         intensity: 1.0,
         speed: 1.0,
@@ -7574,7 +7574,7 @@ function setupUI() {
         id: 'layer_ragdoll',
         name: 'Passive Ragdoll Rest',
         type: 'BEHAVIOR',
-        startFrame: 120,
+        startFrame: 65,
         endFrame: timeline.totalFrames,
         behavior: 'ragdoll',
         intensity: 1.0,
@@ -7604,7 +7604,7 @@ function setupUI() {
         name: 'Athletic Jog (Kinematic Sprint)',
         type: 'ANIMATION',
         startFrame: 0,
-        endFrame: 55,
+        endFrame: 30,
         animType: 'walk',
         gaitStyle: 'jog',
         intensity: 1.15,
@@ -7616,27 +7616,27 @@ function setupUI() {
         id: 'layer_hit',
         name: 'Heavy Chest Impact',
         type: 'PERTURBATION',
-        startFrame: 55,
-        endFrame: 62,
+        startFrame: 30,
+        endFrame: 36,
         targetBody: 'UpperSpine',
-        magnitude: 115.0,
+        magnitude: 85.0,
         yawDeg: 180.0,
-        pitchDeg: 22.0,
+        pitchDeg: 20.0,
         forceMode: 'impulse',
         intensity: 1.0,
-        impulse: TimelineEngine.computeForceVector(115.0, 180.0, 22.0),
+        impulse: TimelineEngine.computeForceVector(85.0, 180.0, 20.0),
         enabled: true,
         color: '#dc2626'
       },
       {
         id: 'layer_flail',
-        name: 'Mid-Air Flail (Reflex Tumbling)',
+        name: 'Dynamic Hit Reaction & Flail',
         type: 'BEHAVIOR',
-        startFrame: 55,
-        endFrame: 115,
-        behavior: 'flail',
-        intensity: 1.25,
-        speed: 1.3,
+        startFrame: 30,
+        endFrame: 75,
+        behavior: 'hitReaction',
+        intensity: 1.2,
+        speed: 1.2,
         enabled: true,
         color: '#f59e0b'
       },
@@ -7644,7 +7644,7 @@ function setupUI() {
         id: 'layer_ragdoll_flip',
         name: 'Tumble Landing & Ragdoll Rest',
         type: 'BEHAVIOR',
-        startFrame: 95,
+        startFrame: 65,
         endFrame: timeline.totalFrames,
         behavior: 'ragdoll',
         intensity: 1.0,
@@ -7665,7 +7665,7 @@ function setupUI() {
     updateTimelineUI();
   };
 
-  // Quick Preset 3: Walk -> Lateral Shove -> Stagger Recovery
+  // Quick Preset 3: Walk -> Lateral Shove -> Stagger Recovery to Standing Pause
   const triggerPresetWalkStumble = () => {
     historyManager.pushState('Preset: Walk & Stumble');
     timeline.layers = [
@@ -7674,7 +7674,7 @@ function setupUI() {
         name: 'Natural Walk Cycle',
         type: 'ANIMATION',
         startFrame: 0,
-        endFrame: 50,
+        endFrame: 25,
         animType: 'walk',
         gaitStyle: 'walk',
         intensity: 1.0,
@@ -7686,40 +7686,41 @@ function setupUI() {
         id: 'layer_shove',
         name: 'Lateral Shove on UpperSpine',
         type: 'PERTURBATION',
-        startFrame: 50,
-        endFrame: 56,
+        startFrame: 25,
+        endFrame: 31,
         targetBody: 'UpperSpine',
-        magnitude: 55.0,
+        magnitude: 40.0,
         yawDeg: 90.0,
         pitchDeg: 5.0,
         forceMode: 'impulse',
         intensity: 1.0,
-        impulse: TimelineEngine.computeForceVector(55.0, 90.0, 5.0),
+        impulse: TimelineEngine.computeForceVector(40.0, 90.0, 5.0),
         enabled: true,
         color: '#dc2626'
       },
       {
         id: 'layer_stumble_flail',
-        name: 'Balance Stepping & Flail',
+        name: 'Stumble & Stagger Steps',
         type: 'BEHAVIOR',
-        startFrame: 50,
-        endFrame: 120,
-        behavior: 'flail',
-        intensity: 0.85,
+        startFrame: 25,
+        endFrame: 70,
+        behavior: 'stagger',
+        intensity: 1.0,
         speed: 1.0,
         enabled: true,
-        color: '#f59e0b'
+        color: '#eab308'
       },
       {
         id: 'layer_recovery_pose',
-        name: 'Recovery Crouch Stance',
-        type: 'ACTIVE_POSE',
-        startFrame: 95,
+        name: 'Standing Balance Pause',
+        type: 'BEHAVIOR',
+        startFrame: 65,
         endFrame: timeline.totalFrames,
-        poseKey: 'crouching',
-        strength: 65.0,
+        behavior: 'balance',
+        intensity: 1.0,
+        speed: 1.0,
         enabled: true,
-        color: '#ec4899'
+        color: '#10b981'
       }
     ];
     timeline.selectedLayerId = 'layer_shove';
@@ -7743,7 +7744,7 @@ function setupUI() {
         name: 'Cautious Stalk (Stealth Gait)',
         type: 'ANIMATION',
         startFrame: 0,
-        endFrame: 65,
+        endFrame: 30,
         animType: 'walk',
         gaitStyle: 'stalk',
         intensity: 1.0,
@@ -7755,24 +7756,24 @@ function setupUI() {
         id: 'layer_snag',
         name: 'Snag Trip on RightFoot',
         type: 'PERTURBATION',
-        startFrame: 65,
-        endFrame: 73,
+        startFrame: 30,
+        endFrame: 36,
         targetBody: 'RightFoot',
-        magnitude: 65.0,
+        magnitude: 50.0,
         yawDeg: 180.0,
-        pitchDeg: 15.0,
+        pitchDeg: 12.0,
         forceMode: 'impulse',
         intensity: 1.0,
-        impulse: TimelineEngine.computeForceVector(65.0, 180.0, 15.0),
+        impulse: TimelineEngine.computeForceVector(50.0, 180.0, 12.0),
         enabled: true,
         color: '#dc2626'
       },
       {
         id: 'layer_dive',
-        name: 'Catch Fall & Dive',
+        name: 'Catch Fall Reflex',
         type: 'BEHAVIOR',
-        startFrame: 65,
-        endFrame: 135,
+        startFrame: 30,
+        endFrame: 75,
         behavior: 'catchFall',
         intensity: 1.1,
         speed: 1.0,
@@ -7783,7 +7784,7 @@ function setupUI() {
         id: 'layer_stalk_ragdoll',
         name: 'Slide & Rest',
         type: 'BEHAVIOR',
-        startFrame: 115,
+        startFrame: 65,
         endFrame: timeline.totalFrames,
         behavior: 'ragdoll',
         intensity: 1.0,
@@ -7887,7 +7888,7 @@ function setupUI() {
         name: 'Jump & Dive (Obstacle Leap)',
         type: 'BEHAVIOR',
         startFrame: 0,
-        endFrame: 110,
+        endFrame: 35,
         behavior: 'jumpDive',
         intensity: 1.0,
         speed: 1.0,
@@ -7899,8 +7900,8 @@ function setupUI() {
         actorId: 'actor-1',
         name: 'Tackle (Diving Body Charge)',
         type: 'BEHAVIOR',
-        startFrame: 90,
-        endFrame: 190,
+        startFrame: 30,
+        endFrame: 75,
         behavior: 'tackle',
         intensity: 1.0,
         speed: 1.0,
@@ -7912,13 +7913,26 @@ function setupUI() {
         actorId: 'actor-1',
         name: 'Catch Fall Reflex',
         type: 'BEHAVIOR',
-        startFrame: 160,
-        endFrame: 240,
+        startFrame: 65,
+        endFrame: 130,
         behavior: 'catchFall',
         intensity: 1.0,
         speed: 1.0,
         enabled: true,
         color: '#059669'
+      },
+      {
+        id: 'layer_tackle_rest',
+        actorId: 'actor-1',
+        name: 'Tumble Landing & Rest',
+        type: 'BEHAVIOR',
+        startFrame: 120,
+        endFrame: timeline.totalFrames,
+        behavior: 'ragdoll',
+        intensity: 1.0,
+        speed: 1.0,
+        enabled: true,
+        color: '#7c3aed'
       }
     ];
     timeline.selectedLayerId = 'layer_jump_dive';
@@ -9091,10 +9105,9 @@ function setupUI() {
       const chkAutoBalance = document.getElementById('chk-auto-balance');
       if (chkAutoBalance) chkAutoBalance.checked = true;
 
-      // Allow 15 frames (~0.25s) for standing foot contact to establish if triggered at frame 0
-      const f = timeline.currentFrame;
-      const startF = f > 0 ? f : 15;
-      const endF = Math.min(timeline.totalFrames - 1, startF + 12);
+      // Always place test shove near the start (Frame 15 = ~0.25s in) so the character establishes initial ground contact, then stumbles and recovers
+      const startF = 15;
+      const endF = 21;
       const yaw = dir === 'front' ? 180 : 0;
 
       // Upsert test perturbation layer
@@ -9122,7 +9135,17 @@ function setupUI() {
         });
       }
 
+      if (character && typeof character.resetToNaturalStance === 'function') {
+        character.resetToNaturalStance();
+      }
+      if (character.dynamicBalance) character.dynamicBalance.reset();
+      if (actor2Character && typeof actor2Character.resetToNaturalStance === 'function') {
+        actor2Character.resetToNaturalStance();
+      }
+      if (actor2Character?.dynamicBalance) actor2Character.dynamicBalance.reset();
+
       timeline.resetSimulation();
+      timeline.seek(0);
       timeline.isBakingLive = true;
       timeline.isPlaying = false;
       updateSimulationStatusUI();
