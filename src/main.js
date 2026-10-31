@@ -492,10 +492,11 @@ async function init() {
         if (timeline.currentFrame >= timeline.totalFrames) {
           timeline.isBakingLive = false;
           timeline.isSimulated = true;
-          timeline.isPlaying = true;
-          timeline.currentFrame = 0;
+          timeline.isPlaying = false; // Never autoplay! Pause at final frame and let user scrub or resimulate
+          timeline.currentFrame = timeline.totalFrames - 1;
           playbackTimer = 0;
           updateSimulationStatusUI();
+          updateTimelineUI();
           updateBoneTrajectory();
           break;
         }
@@ -511,7 +512,10 @@ async function init() {
         stepsThisTick++;
 
         let nextFrame = timeline.currentFrame + 1;
-        if (nextFrame >= timeline.totalFrames) {
+        const maxReviewFrame = (timeline.simulationCache && timeline.simulationCache.length > 0)
+          ? timeline.simulationCache.length
+          : timeline.totalFrames;
+        if (nextFrame >= maxReviewFrame) {
           nextFrame = 0;
         }
         timeline.seek(nextFrame);
@@ -1906,6 +1910,44 @@ function clearBoneTrajectory() {
   }
 }
 
+function updateSimulatedShadeUI() {
+  const shadeEl = document.getElementById('timeline-simulated-shade');
+  const rulerBarEl = document.getElementById('timeline-ruler-cache-bar');
+  const endMarkerEl = document.getElementById('timeline-shade-end-marker');
+
+  const cachedCount = Array.isArray(timeline.simulationCache) ? timeline.simulationCache.length : 0;
+  const total = Math.max(1, timeline.totalFrames);
+
+  if (cachedCount > 0) {
+    const pct = THREE.MathUtils.clamp((cachedCount / total) * 100, 0, 100);
+    const widthStr = `${pct.toFixed(2)}%`;
+    if (shadeEl) {
+      shadeEl.style.display = 'block';
+      shadeEl.style.width = widthStr;
+    }
+    if (rulerBarEl) {
+      rulerBarEl.style.display = 'block';
+      rulerBarEl.style.width = widthStr;
+    }
+    if (endMarkerEl) {
+      endMarkerEl.style.display = 'block';
+      endMarkerEl.textContent = `${cachedCount}f`;
+    }
+  } else {
+    if (shadeEl) {
+      shadeEl.style.width = '0%';
+      shadeEl.style.display = 'none';
+    }
+    if (rulerBarEl) {
+      rulerBarEl.style.width = '0%';
+      rulerBarEl.style.display = 'none';
+    }
+    if (endMarkerEl) {
+      endMarkerEl.style.display = 'none';
+    }
+  }
+}
+
 function updateTimelineUI() {
   const frameEl = document.getElementById('tel-frame');
   const sliderEl = document.getElementById('timeline-slider');
@@ -1916,12 +1958,39 @@ function updateTimelineUI() {
     const pct = (timeline.currentFrame / Math.max(1, timeline.totalFrames)) * 100;
     playheadEl.style.left = `${THREE.MathUtils.clamp(pct, 0, 100)}%`;
   }
+  updateSimulatedShadeUI();
+}
+
+function startLiveSimulation(fromFrame = 0) {
+  if (fromFrame === 0) {
+    timeline.resetSimulation();
+  } else {
+    timeline.isSimulated = false;
+  }
+  timeline.isBakingLive = true;
+  timeline.isPlaying = false;
+  updateSimulationStatusUI();
+  updateTimelineUI();
+}
+
+function stopLiveSimulation() {
+  if (!timeline.isBakingLive) return;
+  timeline.isBakingLive = false;
+  const cachedCount = Array.isArray(timeline.simulationCache) ? timeline.simulationCache.length : 0;
+  timeline.isSimulated = cachedCount > 0;
+  timeline.isPlaying = false; // Never autoplay on stop - pause and let user decide
+  playbackTimer = 0;
+  updateSimulationStatusUI();
+  updateTimelineUI();
+  updateBoneTrajectory();
 }
 
 function scrubToFrame(frameIdx) {
-  timeline.isBakingLive = false;
+  if (timeline.isBakingLive) {
+    stopLiveSimulation();
+  }
   timeline.isPlaying = false;
-  const clamped = THREE.MathUtils.clamp(Math.round(frameIdx), 0, timeline.totalFrames);
+  const clamped = THREE.MathUtils.clamp(Math.round(frameIdx), 0, timeline.totalFrames - 1);
   timeline.seek(clamped);
   if (mixamoBridge && mixamoBridge.isVisible) {
     mixamoBridge.update();
@@ -5447,6 +5516,12 @@ function renderTimelineRuler() {
   if (!trackEl) return;
   trackEl.innerHTML = '';
 
+  // Green simulation cache bar at the bottom of the ruler
+  const cacheBar = document.createElement('div');
+  cacheBar.id = 'timeline-ruler-cache-bar';
+  cacheBar.className = 'timeline-ruler-cache-bar';
+  trackEl.appendChild(cacheBar);
+
   const total = timeline.totalFrames;
   let step = 30;
   if (total <= 120) step = 15;
@@ -5468,6 +5543,8 @@ function renderTimelineRuler() {
     span.textContent = `${f}f`;
     trackEl.appendChild(span);
   }
+
+  updateSimulatedShadeUI();
 }
 const buildRulerTicks = renderTimelineRuler;
 window.buildRulerTicks = renderTimelineRuler;
@@ -5742,20 +5819,46 @@ function setupBarDraggability(barEl, layer, trackAreaEl, rowEl) {
 function updateSimulationStatusUI() {
   const statusEl = document.getElementById('sim-status-badge');
   const btnPlay = document.getElementById('btn-play');
+  const btnStopSim = document.getElementById('btn-stop-sim');
+  const btnResimHeader = document.getElementById('btn-resim-header');
+
+  const cachedCount = Array.isArray(timeline.simulationCache) ? timeline.simulationCache.length : 0;
 
   if (timeline.isBakingLive) {
-    statusEl.textContent = 'RENDERING SIMULATION KEYFRAMES...';
-    statusEl.className = 'status-badge status-rendering';
-    btnPlay.textContent = '❚❚ Pause';
-  } else if (timeline.isSimulated) {
-    statusEl.textContent = 'SIMULATION BAKED (REVIEW MODE)';
-    statusEl.className = 'status-badge status-baked';
-    btnPlay.textContent = timeline.isPlaying ? '❚❚ Pause' : '▶ Play';
+    if (statusEl) {
+      statusEl.textContent = `SIMULATING... (${timeline.currentFrame}/${timeline.totalFrames}f)`;
+      statusEl.className = 'status-badge status-rendering';
+    }
+    if (btnPlay) {
+      btnPlay.textContent = '❚❚ Pause Sim';
+      btnPlay.classList.add('btn-simulate');
+    }
+    if (btnStopSim) btnStopSim.style.display = 'inline-flex';
+    if (btnResimHeader) btnResimHeader.style.display = 'none';
+  } else if (cachedCount > 0) {
+    const isFull = cachedCount >= timeline.totalFrames;
+    if (statusEl) {
+      statusEl.textContent = isFull ? 'SIMULATION BAKED (REVIEW MODE)' : `PARTIAL SIMULATION (0 - ${cachedCount}f)`;
+      statusEl.className = 'status-badge status-baked';
+    }
+    if (btnPlay) {
+      btnPlay.textContent = timeline.isPlaying ? '❚❚ Pause' : '▶ Play';
+      btnPlay.classList.remove('btn-simulate');
+    }
+    if (btnStopSim) btnStopSim.style.display = 'none';
+    if (btnResimHeader) btnResimHeader.style.display = 'inline-flex';
   } else {
-    statusEl.textContent = 'AUTHORING MODE (T-POSE PREVIEW)';
-    statusEl.className = 'status-badge status-authoring';
-    btnPlay.textContent = '▶ Simulate & Play';
-    btnPlay.disabled = false;
+    if (statusEl) {
+      statusEl.textContent = 'AUTHORING MODE (T-POSE PREVIEW)';
+      statusEl.className = 'status-badge status-authoring';
+    }
+    if (btnPlay) {
+      btnPlay.textContent = '▶ Simulate & Play';
+      btnPlay.classList.add('btn-simulate');
+      btnPlay.disabled = false;
+    }
+    if (btnStopSim) btnStopSim.style.display = 'none';
+    if (btnResimHeader) btnResimHeader.style.display = 'none';
     clearBoneTrajectory();
   }
 }
@@ -6119,24 +6222,34 @@ function setupUI() {
 
   // --- UNIFIED PLAY & RUN SIMULATION BUTTON ---
   btnPlay.addEventListener('click', () => {
-    if (!timeline.isSimulated) {
-      timeline.resetSimulation();
-      timeline.isBakingLive = true;
-      timeline.isPlaying = false;
-      updateSimulationStatusUI();
+    // 1. If currently simulating, stop/pause simulation early at current frame
+    if (timeline.isBakingLive) {
+      stopLiveSimulation();
+      return;
+    }
+
+    // 2. If no simulation cache exists, start fresh live simulation
+    const cachedCount = Array.isArray(timeline.simulationCache) ? timeline.simulationCache.length : 0;
+    if (cachedCount === 0 || !timeline.isSimulated) {
+      startLiveSimulation(0);
     } else {
+      // 3. Otherwise toggle review playback of simulated frames
       timeline.isPlaying = !timeline.isPlaying;
       updateSimulationStatusUI();
     }
   });
 
-  // Re-Simulate button
-  document.getElementById('btn-resim').addEventListener('click', () => {
-    timeline.resetSimulation();
-    timeline.isBakingLive = true;
-    timeline.isPlaying = false;
-    updateSimulationStatusUI();
+  // Dedicated Stop Simulation button in timeline header
+  document.getElementById('btn-stop-sim')?.addEventListener('click', () => {
+    stopLiveSimulation();
   });
+
+  // Re-Simulate buttons (Left panel & timeline header)
+  const triggerResim = () => {
+    startLiveSimulation(0);
+  };
+  document.getElementById('btn-resim')?.addEventListener('click', triggerResim);
+  document.getElementById('btn-resim-header')?.addEventListener('click', triggerResim);
 
   // Reset to Pristine T-Pose
   document.getElementById('btn-reset-tpose').addEventListener('click', () => {

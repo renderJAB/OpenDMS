@@ -876,6 +876,53 @@
       overflow: hidden;
     }
 
+    /* Shaded Duration Indicator for Simulation Cache */
+    .timeline-simulated-shade {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.06) 100%);
+      border-right: 2px solid #10b981;
+      box-shadow: 2px 0 10px rgba(16, 185, 129, 0.3);
+      pointer-events: none;
+      z-index: 10;
+      display: none;
+      transition: width 0.04s ease;
+    }
+
+    .timeline-shade-end-marker {
+      position: absolute;
+      top: 2px;
+      right: 0;
+      transform: translateX(50%);
+      font-size: 8px;
+      font-weight: 700;
+      color: #34d399;
+      background: rgba(6, 78, 59, 0.95);
+      border: 1px solid rgba(52, 211, 153, 0.6);
+      border-radius: 3px;
+      padding: 1px 4px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .timeline-ruler-cache-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      background: #10b981;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.9);
+      pointer-events: none;
+      z-index: 15;
+      display: none;
+      transition: width 0.04s ease;
+    }
+
     .playhead-line {
       position: absolute;
       top: 0;
@@ -3276,6 +3323,12 @@
 
     <div class="timeline-header-bar">
       <button class="btn btn-simulate" id="btn-play">▶ Simulate &amp; Play</button>
+      <button class="btn" id="btn-stop-sim" title="Stop simulation early and keep cached frames" style="display: none; padding: 4px 8px; font-size: 11px; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5; font-weight: 700;">
+        ⏹ Stop Sim
+      </button>
+      <button class="btn" id="btn-resim-header" title="Re-simulate physics from Frame 0 (Ctrl+Space)" style="display: none; padding: 4px 8px; font-size: 11px; border-color: rgba(56, 189, 248, 0.4); color: #7dd3fc; background: rgba(56, 189, 248, 0.08);">
+        🔄 Re-Sim
+      </button>
       <div class="nle-tool-group" title="Frame Stepping Transport">
         <button class="nle-tool-btn" id="btn-step-start" title="Jump to Frame 0 (Home)">⏮</button>
         <button class="nle-tool-btn" id="btn-step-prev" title="Previous Frame (-1f / Left Arrow)">◀</button>
@@ -3359,6 +3412,7 @@
           </div>
         </div>
         <div class="timeline-ruler-track" id="timeline-ruler-track" title="Click or drag to scrub timeline playhead">
+          <div id="timeline-ruler-cache-bar" class="timeline-ruler-cache-bar"></div>
           <span class="ruler-tick-label" style="left: 0%; transform: translateX(2px);">0f</span>
           <span class="ruler-tick-label" style="left: 12.5%;">30f</span>
           <span class="ruler-tick-label" style="left: 25%;">60f</span>
@@ -3372,6 +3426,10 @@
       </div>
 
       <div class="timeline-playhead-overlay">
+        <!-- Shaded Duration Indicator of up to what length is simulated -->
+        <div id="timeline-simulated-shade" class="timeline-simulated-shade">
+          <div class="timeline-shade-end-marker" id="timeline-shade-end-marker">0f</div>
+        </div>
         <div class="playhead-line" id="timeline-playhead-line">
           <div class="playhead-cap"></div>
         </div>

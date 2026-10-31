@@ -2050,7 +2050,7 @@ export class TimelineEngine {
       mixamoBridge: this.characterBridge || null
     }];
 
-    if (this.isSimulated && this.simulationCache[this.currentFrame]) {
+    if (this.simulationCache && this.simulationCache[this.currentFrame]) {
       const data = this.simulationCache[this.currentFrame];
 
       for (const actor of actors) {
