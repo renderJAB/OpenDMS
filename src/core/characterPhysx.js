@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CharacterSensors } from './sensors.js';
+import { DynamicBalanceController } from './dynamicBalance.js';
 import { SKELETON_TREE, JOINT_ANCHORS, JOINT_CONFIGS, ENDORPHIN_ACTIVE_POSES, clampBoneEulerRotation, NATURAL_STANCE_ROTATIONS } from './character.js';
 
 export class PhysXCharacter {
@@ -25,6 +26,14 @@ export class PhysXCharacter {
     this.allowGroundActiveMotor = false;
     this.impactShockTimer = 0.0;
     this.sensors = new CharacterSensors(this);
+    this.dynamicBalance = new DynamicBalanceController(this);
+    this.balanceControlEnabled = true;
+    this.counterWeighingEnabled = true;
+    this.balanceRecoveryStrength = 1.0;
+    this.lossOfBalanceTiltLimit = 55;
+    this.isLossOfBalance = false;
+    this.steppingFoot = 'Left';
+    this.zmpDisplacement = 0.0;
     this.currentPose = {
       rootPos: new THREE.Vector3(initialPos.x, initialPos.y, initialPos.z),
       localRotations: {}
@@ -570,13 +579,12 @@ export class PhysXCharacter {
     }
   }
 
+  // --- BOSTON DYNAMICS ACTIVE DYNAMIC BALANCE & PUSH RECOVERY CONTROLLER ---
   updateZMPBalance(dt = 1 / 120) {
     if (this.isKinematic || this.isPureRagdoll || this.balanceControlEnabled === false) return;
-    const pelvis = this.bodies['Pelvis'];
-    if (!pelvis || !pelvis.actor) return;
-    const q = pelvis.actor.getGlobalPose().q;
-    const upVec = new THREE.Vector3(0, 1, 0).applyQuaternion(new THREE.Quaternion(q.x, q.y, q.z, q.w));
-    this.isLossOfBalance = upVec.y < Math.cos(THREE.MathUtils.degToRad(this.lossOfBalanceTiltLimit || 52));
+    if (this.dynamicBalance) {
+      this.dynamicBalance.update(dt);
+    }
   }
 
   enforceAnatomicalLimits(dt) {
@@ -599,6 +607,7 @@ export class PhysXCharacter {
     }
   }
 
+  // Endorphin / Boston Dynamics Force Effector with Kinetic Chain Coupling & Active Push Recovery
   applyForceEffector(bodyName, forceVector, isContinuous = false) {
     if (this.isKinematic) return;
     const PhysX = this.physx;
@@ -606,8 +615,13 @@ export class PhysXCharacter {
     const b = this.bodies[target];
     if (!b || !b.actor) return;
 
-    this.impactShockTimer = isContinuous ? Math.max(this.impactShockTimer, 0.08) : 0.26;
-    const powerScale = isContinuous ? 0.32 : 3.2;
+    if (!this.balanceControlEnabled) {
+      this.impactShockTimer = isContinuous ? Math.max(this.impactShockTimer, 0.08) : 0.26;
+    } else {
+      this.impactShockTimer = 0; // Maintain full joint motor stiffness for active push recovery
+    }
+
+    const powerScale = isContinuous ? 0.32 : 1.0;
     const fx = forceVector.x * powerScale;
     const fy = forceVector.y * powerScale;
     const fz = forceVector.z * powerScale;
@@ -615,27 +629,14 @@ export class PhysXCharacter {
     b.actor.addForce(new PhysX.PxVec3(fx, fy, fz), PhysX.PxForceModeEnum.eIMPULSE, true);
 
     b.actor.addTorque(new PhysX.PxVec3(
-      fz * 0.14,
-      (fx - fz) * 0.06,
-      -fx * 0.14
+      fz * 0.08,
+      (fx - fz) * 0.04,
+      -fx * 0.08
     ), PhysX.PxForceModeEnum.eIMPULSE, true);
 
     const def = SKELETON_TREE[target];
     if (def && def.parent && this.bodies[def.parent]) {
-      this.bodies[def.parent].actor.addForce(new PhysX.PxVec3(fx * 0.65, fy * 0.65, fz * 0.65), PhysX.PxForceModeEnum.eIMPULSE, true);
-    }
-
-    for (const [childName, cDef] of Object.entries(SKELETON_TREE)) {
-      if (cDef.parent === target && this.bodies[childName]) {
-        this.bodies[childName].actor.addForce(new PhysX.PxVec3(fx * 0.45, fy * 0.45, fz * 0.45), PhysX.PxForceModeEnum.eIMPULSE, true);
-      }
-    }
-
-    if (target !== 'Pelvis' && this.bodies['Pelvis']) {
-      this.bodies['Pelvis'].actor.addForce(new PhysX.PxVec3(fx * 0.55, fy * 0.45, fz * 0.55), PhysX.PxForceModeEnum.eIMPULSE, true);
-    }
-    if (target !== 'UpperSpine' && this.bodies['UpperSpine']) {
-      this.bodies['UpperSpine'].actor.addForce(new PhysX.PxVec3(fx * 0.45, fy * 0.40, fz * 0.45), PhysX.PxForceModeEnum.eIMPULSE, true);
+      this.bodies[def.parent].actor.addForce(new PhysX.PxVec3(fx * 0.35, fy * 0.35, fz * 0.35), PhysX.PxForceModeEnum.eIMPULSE, true);
     }
   }
 

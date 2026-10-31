@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CharacterSensors } from './sensors.js';
+import { DynamicBalanceController } from './dynamicBalance.js';
 import { SKELETON_TREE, JOINT_ANCHORS, ENDORPHIN_ACTIVE_POSES, clampBoneEulerRotation, NATURAL_STANCE_ROTATIONS } from './character.js';
 
 export class MuJoCoCharacter {
@@ -23,6 +24,14 @@ export class MuJoCoCharacter {
     this.isPureRagdoll = false;
     this.allowGroundActiveMotor = false;
     this.sensors = new CharacterSensors(this);
+    this.dynamicBalance = new DynamicBalanceController(this);
+    this.balanceControlEnabled = true;
+    this.counterWeighingEnabled = true;
+    this.balanceRecoveryStrength = 1.0;
+    this.lossOfBalanceTiltLimit = 55;
+    this.isLossOfBalance = false;
+    this.steppingFoot = 'Left';
+    this.zmpDisplacement = 0.0;
     this.currentPose = {
       rootPos: new THREE.Vector3(initialPos.x, initialPos.y, initialPos.z),
       localRotations: {}
@@ -778,6 +787,7 @@ export class MuJoCoCharacter {
     }
   }
 
+  // Endorphin / Boston Dynamics Force Effector with Kinetic Chain Coupling & Active Push Recovery
   applyForceEffector(bodyName, forceVector, isContinuous = false) {
     if (this.isKinematic) return;
 
@@ -785,61 +795,40 @@ export class MuJoCoCharacter {
     const b = this.bodies[target];
     if (!b || !b.rigidBody) return;
 
-    this.impactShockTimer = isContinuous ? Math.max(this.impactShockTimer, 0.08) : 0.26;
-    const powerScale = isContinuous ? 0.32 : 3.2;
+    if (!this.balanceControlEnabled) {
+      this.impactShockTimer = isContinuous ? Math.max(this.impactShockTimer, 0.08) : 0.26;
+    } else {
+      this.impactShockTimer = 0; // Maintain full joint motor stiffness for active push recovery
+    }
+
+    const powerScale = isContinuous ? 0.32 : 1.0;
     const fx = forceVector.x * powerScale;
     const fy = forceVector.y * powerScale;
     const fz = forceVector.z * powerScale;
 
     b.rigidBody.applyImpulse({ x: fx, y: fy, z: fz });
     b.rigidBody.applyTorqueImpulse({
-      x: fz * 0.14,
-      y: (fx - fz) * 0.06,
-      z: -fx * 0.14
+      x: fz * 0.08,
+      y: (fx - fz) * 0.04,
+      z: -fx * 0.08
     });
 
     const def = SKELETON_TREE[target];
     if (def && def.parent && this.bodies[def.parent]) {
       this.bodies[def.parent].rigidBody.applyImpulse({
-        x: fx * 0.65,
-        y: fy * 0.65,
-        z: fz * 0.65
-      });
-    }
-
-    for (const [childName, cDef] of Object.entries(SKELETON_TREE)) {
-      if (cDef.parent === target && this.bodies[childName]) {
-        this.bodies[childName].rigidBody.applyImpulse({
-          x: fx * 0.45,
-          y: fy * 0.45,
-          z: fz * 0.45
-        });
-      }
-    }
-
-    if (target !== 'Pelvis' && this.bodies['Pelvis']) {
-      this.bodies['Pelvis'].rigidBody.applyImpulse({
-        x: fx * 0.55,
-        y: fy * 0.45,
-        z: fz * 0.55
-      });
-    }
-    if (target !== 'UpperSpine' && this.bodies['UpperSpine']) {
-      this.bodies['UpperSpine'].rigidBody.applyImpulse({
-        x: fx * 0.45,
-        y: fy * 0.40,
-        z: fz * 0.45
+        x: fx * 0.35,
+        y: fy * 0.35,
+        z: fz * 0.35
       });
     }
   }
 
+  // --- BOSTON DYNAMICS ACTIVE DYNAMIC BALANCE & PUSH RECOVERY CONTROLLER ---
   updateZMPBalance(dt = 1 / 120) {
     if (this.isKinematic || this.isPureRagdoll || this.balanceControlEnabled === false) return;
-    const pelvis = this.bodies['Pelvis'];
-    if (!pelvis || !pelvis.rigidBody) return;
-    const r = pelvis.rigidBody.rotation();
-    const upVec = new THREE.Vector3(0, 1, 0).applyQuaternion(new THREE.Quaternion(r.x, r.y, r.z, r.w));
-    this.isLossOfBalance = upVec.y < Math.cos(THREE.MathUtils.degToRad(this.lossOfBalanceTiltLimit || 52));
+    if (this.dynamicBalance) {
+      this.dynamicBalance.update(dt);
+    }
   }
 
   applyActivePose(poseKey, strength = 1.0) {

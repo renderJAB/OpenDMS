@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { CharacterSensors } from './sensors.js';
+import { DynamicBalanceController } from './dynamicBalance.js';
 
 export const SKELETON_TREE = {
   Pelvis: { parent: null, offset: [0, 0.95, 0] },
@@ -382,11 +383,12 @@ export class BiomechanicalCharacter {
     this.baseSegmentHeights = {};
     this.sensors = new CharacterSensors(this);
 
-    // Biomechanical Dynamic Balance & Inverted Pendulum Recovery Controller (Endorphin ZMP)
+    // Biomechanical Dynamic Balance & Inverted Pendulum Recovery Controller (Endorphin / Boston Dynamics ZMP)
+    this.dynamicBalance = new DynamicBalanceController(this);
     this.balanceControlEnabled = true;
     this.counterWeighingEnabled = true;
     this.balanceRecoveryStrength = 1.0;
-    this.lossOfBalanceTiltLimit = 45;
+    this.lossOfBalanceTiltLimit = 55;
     this.isLossOfBalance = false;
     this.steppingFoot = 'Left'; // 'Left' | 'Right'
     this.steppingPhaseTimer = 0.0;
@@ -1412,88 +1414,12 @@ export class BiomechanicalCharacter {
     }
   }
 
-  // --- ENDORPHIN 2.7.1 BIOMECHANICAL ZERO-MOMENT-POINT (ZMP) DYNAMIC BALANCE CONTROLLER ---
+  // --- BOSTON DYNAMICS ACTIVE DYNAMIC BALANCE & PUSH RECOVERY CONTROLLER ---
   // Calculates inverted pendulum Capture Point and dynamically steps feet to maintain stability.
   updateZMPBalance(dt) {
     if (this.isKinematic || this.isPureRagdoll || !this.balanceControlEnabled) return;
-
-    const footL = this.bodies['LeftFoot']?.rigidBody?.translation();
-    const footR = this.bodies['RightFoot']?.rigidBody?.translation();
-    if (!footL || !footR) return;
-
-    // Midpoint of feet support polygon
-    const baseSupportX = (footL.x + footR.x) * 0.5;
-    const baseSupportZ = (footL.z + footR.z) * 0.5;
-
-    // Inverted pendulum eigenfrequency: omega0 = sqrt(g / h_com)
-    const comY = Math.max(0.35, this.sensors.centerOfMass.y);
-    const omega0 = Math.sqrt(9.81 / comY);
-
-    // Instantaneous Capture Point (Zero Moment Point): ZMP = CoM + v_CoM / omega0
-    const zmpX = this.sensors.centerOfMass.x + (this.sensors.comVelocity.x / omega0);
-    const zmpZ = this.sensors.centerOfMass.z + (this.sensors.comVelocity.z / omega0);
-
-    // Error vector from base of support to capture point
-    const errX = zmpX - baseSupportX;
-    const errZ = zmpZ - baseSupportZ;
-    this.zmpDisplacement = Math.hypot(errX, errZ);
-
-    // Unrecoverable loss of balance threshold
-    const maxTilt = this.lossOfBalanceTiltLimit !== undefined ? this.lossOfBalanceTiltLimit : 45;
-    if (this.zmpDisplacement > 0.65 || this.sensors.tiltAngle > maxTilt || this.sensors.verticalVelocity < -1.6) {
-      this.isLossOfBalance = true;
-      return;
-    }
-
-    this.isLossOfBalance = false;
-
-    if (this.zmpDisplacement > 0.06) {
-      this.steppingPhaseTimer += dt * 3.5;
-
-      // Select swing leg based on push direction or alternating timer
-      if (this.steppingPhaseTimer > 1.0) {
-        this.steppingFoot = this.steppingFoot === 'Left' ? 'Right' : 'Left';
-        this.steppingPhaseTimer = 0.0;
-      }
-
-      const isLeftSwing = this.steppingFoot === 'Left';
-      const swingHipName = isLeftSwing ? 'Pelvis_to_LeftThigh' : 'Pelvis_to_RightThigh';
-      const swingKneeName = isLeftSwing ? 'LeftThigh_to_LeftCalf' : 'RightThigh_to_RightCalf';
-      const stanceHipName = isLeftSwing ? 'Pelvis_to_RightThigh' : 'Pelvis_to_LeftThigh';
-
-      const swingHip = this.joints.find(j => j.name === swingHipName);
-      const swingKnee = this.joints.find(j => j.name === swingKneeName);
-      const stanceHip = this.joints.find(j => j.name === stanceHipName);
-
-      // Pitch correction (forward/backward step):
-      const pitchStep = THREE.MathUtils.clamp(errZ * 1.8, -0.75, 0.95) * (this.balanceRecoveryStrength || 1.0);
-      // Roll correction (lateral step):
-      const rollStep = THREE.MathUtils.clamp(errX * 1.2, -0.45, 0.45) * (this.balanceRecoveryStrength || 1.0);
-
-      if (swingHip) {
-        swingHip.targetAngle.x += pitchStep * 0.85;
-        swingHip.targetAngle.z += (isLeftSwing ? rollStep : -rollStep) * 0.75;
-      }
-      if (swingKnee) {
-        const kneeFlex = Math.sin(this.steppingPhaseTimer * Math.PI) * 0.65 * Math.abs(pitchStep);
-        swingKnee.targetAngle.x += kneeFlex;
-      }
-      if (stanceHip) {
-        stanceHip.targetAngle.x -= pitchStep * 0.25;
-      }
-
-      // Natural counter-balancing arm swing
-      if (this.counterWeighingEnabled !== false) {
-        const lArm = this.joints.find(j => j.name === 'LeftShoulder_to_LeftUpperArm');
-        const rArm = this.joints.find(j => j.name === 'RightShoulder_to_RightUpperArm');
-        if (lArm && rArm) {
-          const armPitch = THREE.MathUtils.clamp(-errZ * 1.2, -0.6, 0.6);
-          lArm.targetAngle.x += (isLeftSwing ? -armPitch : armPitch) * 0.7;
-          rArm.targetAngle.x += (isLeftSwing ? armPitch : -armPitch) * 0.7;
-          lArm.targetAngle.z -= Math.abs(rollStep) * 0.5;
-          rArm.targetAngle.z += Math.abs(rollStep) * 0.5;
-        }
-      }
+    if (this.dynamicBalance) {
+      this.dynamicBalance.update(dt);
     }
   }
 
@@ -1530,7 +1456,7 @@ export class BiomechanicalCharacter {
     }
   }
 
-  // Endorphin 2.7.1 High-Impact Force Effector with Kinetic Chain Coupling & Shock Yield
+  // Endorphin / Boston Dynamics Force Effector with Kinetic Chain Coupling & Active Push Recovery
   applyForceEffector(bodyName, forceVector, isContinuous = false) {
     if (this.isKinematic) return;
 
@@ -1538,11 +1464,15 @@ export class BiomechanicalCharacter {
     const b = this.bodies[target];
     if (!b || !b.rigidBody) return;
 
-    // Trigger momentary postural shock yield so hit overcomes joint locks & ground stiction
-    this.impactShockTimer = isContinuous ? Math.max(this.impactShockTimer, 0.08) : 0.26;
+    // When balance control is enabled, do NOT weaken motors; character braces core & legs for push recovery!
+    if (!this.balanceControlEnabled) {
+      this.impactShockTimer = isContinuous ? Math.max(this.impactShockTimer, 0.08) : 0.26;
+    } else {
+      this.impactShockTimer = 0; // Maintain full joint motor stiffness for active push recovery
+    }
 
-    // Calibrated Endorphin 92.5kg articulated body multiplier
-    const powerScale = isContinuous ? 0.32 : 3.2;
+    // Calibrated impulse scaling: imparts realistic push velocity (0.3 - 0.7 m/s) suitable for biped push recovery
+    const powerScale = isContinuous ? 0.32 : 1.0;
     const fx = forceVector.x * powerScale;
     const fy = forceVector.y * powerScale;
     const fz = forceVector.z * powerScale;
@@ -1550,46 +1480,20 @@ export class BiomechanicalCharacter {
     // 1. Primary hit on targeted bone
     b.rigidBody.applyImpulse({ x: fx, y: fy, z: fz }, true);
 
-    // 2. Rotational whip torque on targeted bone so limbs/torso twist into the hit
+    // 2. Rotational whip torque on targeted bone
     b.rigidBody.applyTorqueImpulse({
-      x: fz * 0.14,
-      y: (fx - fz) * 0.06,
-      z: -fx * 0.14
+      x: fz * 0.08,
+      y: (fx - fz) * 0.04,
+      z: -fx * 0.08
     }, true);
 
-    // 3. Propagate kinetic follow-through to parent & child segments in SKELETON_TREE
+    // 3. Modest parent kinetic chain coupling
     const def = SKELETON_TREE[target];
     if (def && def.parent && this.bodies[def.parent]) {
       this.bodies[def.parent].rigidBody.applyImpulse({
-        x: fx * 0.65,
-        y: fy * 0.65,
-        z: fz * 0.65
-      }, true);
-    }
-
-    for (const [childName, cDef] of Object.entries(SKELETON_TREE)) {
-      if (cDef.parent === target && this.bodies[childName]) {
-        this.bodies[childName].rigidBody.applyImpulse({
-          x: fx * 0.45,
-          y: fy * 0.45,
-          z: fz * 0.45
-        }, true);
-      }
-    }
-
-    // 4. Core center-of-mass transfer so limb/head/chest hits genuinely drive the whole body
-    if (target !== 'Pelvis' && this.bodies['Pelvis']) {
-      this.bodies['Pelvis'].rigidBody.applyImpulse({
-        x: fx * 0.55,
-        y: fy * 0.45,
-        z: fz * 0.55
-      }, true);
-    }
-    if (target !== 'UpperSpine' && this.bodies['UpperSpine']) {
-      this.bodies['UpperSpine'].rigidBody.applyImpulse({
-        x: fx * 0.45,
-        y: fy * 0.40,
-        z: fz * 0.45
+        x: fx * 0.35,
+        y: fy * 0.35,
+        z: fz * 0.35
       }, true);
     }
   }
