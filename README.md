@@ -1,5 +1,10 @@
 # OpenDMS Studio
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Support on Gumroad](https://img.shields.io/badge/Support_on-Gumroad-ff90e8?logo=gumroad&logoColor=black)](https://renderjab.gumroad.com/l/opendms)
+[![Three.js](https://img.shields.io/badge/Render-Three.js_r170-black?logo=three.js)](https://threejs.org/)
+[![WebAssembly](https://img.shields.io/badge/Physics-WASM_Multi--Engine-654ff0?logo=webassembly)](https://webassembly.org/)
+
 > **OpenDMS** is a high-performance, real-time 3D physics-driven character simulation and stunt animation suite. Built on WebAssembly and WebGL/Three.js, OpenDMS unites **Dynamic Motion Synthesis (DMS)**, multi-backend WASM physics, natural language AI stunt direction, and professional DCC timeline authoring into a clean, modern, standalone studio environment.
 
 ---
@@ -95,6 +100,21 @@ The optimized client bundle will be output to the `dist/` directory.
 | `T` | Reset Active Character to Zero T-Pose |
 | `Ctrl + Z` | Undo (50-Step Snapshot History) |
 | `Ctrl + Y` / `Ctrl + Shift + Z` | Redo |
+
+---
+
+## 💖 Support OpenDMS Development
+
+OpenDMS is a free, 100% open-source software project built to bring modern, accessible physics stunt animation to indie animators, VFX artists, and game studios worldwide.
+
+If OpenDMS saves you time or empowers your creative pipeline, please consider supporting continued development:
+
+[![Support on Gumroad](https://img.shields.io/badge/Support_on-Gumroad-ff90e8?style=for-the-badge&logo=gumroad&logoColor=black)](https://renderjab.gumroad.com/l/opendms)
+
+### Where Contributions Go:
+* 🚀 **Physics Expansion**: Implementing Cascadeur-inspired ballistic flight arcs and fulcrum friction points.
+* 🏃 **Animation & Preset Library**: Expanding high-fidelity stunt, parkour, and martial arts mocap takes.
+* 🖥️ **Cross-Platform Desktop Apps**: Compiling dedicated, signed Windows and macOS offline desktop binaries.
 
 ---
 
