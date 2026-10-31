@@ -2591,7 +2591,7 @@ export const SETTING_EXPLANATIONS = {
   },
   'btn-prop-fluid': {
     title: 'Spawn Water Pool Volume',
-    category: 'Fluid Simulation (2.7)',
+    category: 'Fluid Simulation',
     icon: '🌊',
     desc: 'Spawns a physical fluid volume with buoyancy and viscous velocity damping.',
     effect: 'Characters float upward based on submerged volume and experience underwater drag.'

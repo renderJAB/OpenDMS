@@ -344,7 +344,7 @@ export const BEHAVIOR_DEFINITIONS = {
   },
   reachHold: {
     id: 'reachHold',
-    name: 'Hands Reach & Look At (2.7.1)',
+    name: 'Hands Reach & Look At',
     category: 'arms',
     color: '#38bdf8',
     icon: '🎯',
@@ -648,7 +648,7 @@ export const ENDORPHIN_BEHAVIOR_CATEGORIES = [
       },
       {
         key: 'reachHold',
-        name: 'Hands Reach & Look At (2.7.1)',
+        name: 'Hands Reach & Look At',
         shortDesc: '3D target-aimed arm reach with dynamic head & gaze tracking',
         icon: '🎯',
         color: '#38bdf8',

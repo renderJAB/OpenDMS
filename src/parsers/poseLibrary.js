@@ -277,10 +277,10 @@ export const ENDORPHIN_POSES_LIBRARY = [
   },
   {
     id: 'scuba_swim',
-    name: 'Scuba Swimming Stroke (Endorphin 2.7)',
+    name: 'Scuba Swimming Stroke (Fluid Simulation)',
     category: 'Stunts',
     icon: '🏊',
-    description: 'Authentic 2.7 fluid swimming propulsion stroke.',
+    description: 'Dynamic fluid swimming propulsion stroke.',
     rootPos: [0, 0.95, 0],
     localRotations: {
       LowerSpine: [-0.15, 0, 0],
